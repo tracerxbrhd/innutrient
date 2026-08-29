@@ -1,0 +1,1 @@
+{"format_version":1,"beneficial":true,"condition":{"type":"all_healthy"},"effect":{"id":"minecraft:luck","duration_ticks":260,"amplifier":0,"ambient":true,"show_particles":false}}

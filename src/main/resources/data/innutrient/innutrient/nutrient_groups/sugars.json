@@ -1,0 +1,1 @@
+{"format_version":1,"translation_key":"nutrient.innutrient.sugars","icon":"minecraft:honey_bottle","item_tag":"innutrient:foods/sugars","color":"#D875C8","order":50,"default_level":30.0,"healthy_min":0.0,"healthy_max":60.0,"low_threshold":0.0,"high_threshold":80.0,"gain_multiplier":1.0,"decay_multiplier":1.0,"penalize_low":false,"penalize_high":true,"required_for_balance":true}

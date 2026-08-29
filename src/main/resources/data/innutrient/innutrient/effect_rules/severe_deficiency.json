@@ -1,0 +1,1 @@
+{"format_version":1,"beneficial":false,"condition":{"type":"count_below","threshold":20.0,"count":3},"effect":{"id":"minecraft:weakness","duration_ticks":260,"amplifier":0,"ambient":true,"show_particles":false}}

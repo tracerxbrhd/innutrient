@@ -1,0 +1,6 @@
+{
+  "replace":false,
+  "values":["minecraft:wheat","minecraft:bread","minecraft:cookie",
+    {"id":"farmersdelight:rice","required":false},{"id":"farmersdelight:rice_panicle","required":false},
+    {"id":"farmersdelight:wheat_dough","required":false},{"id":"farmersdelight:raw_pasta","required":false}]
+}

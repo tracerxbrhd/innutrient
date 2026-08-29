@@ -1,0 +1,13 @@
+{
+  "format_version": 1,
+  "profiles": [
+    {"item":"minecraft:golden_apple","nutrients":{"innutrient:fruits":0.65,"innutrient:sugars":0.35}},
+    {"item":"minecraft:enchanted_golden_apple","nutrients":{"innutrient:fruits":0.55,"innutrient:sugars":0.45}},
+    {"item":"minecraft:golden_carrot","nutrients":{"innutrient:vegetables":0.85,"innutrient:sugars":0.15}},
+    {"item":"minecraft:cookie","nutrients":{"innutrient:grains":0.55,"innutrient:sugars":0.45}},
+    {"item":"minecraft:pumpkin_pie","nutrients":{"innutrient:vegetables":0.30,"innutrient:grains":0.35,"innutrient:sugars":0.35}},
+    {"item":"minecraft:rabbit_stew","nutrients":{"innutrient:proteins":0.45,"innutrient:vegetables":0.55}},
+    {"item":"minecraft:mushroom_stew","nutrients":{"innutrient:vegetables":1.0}},
+    {"item":"minecraft:beetroot_soup","nutrients":{"innutrient:vegetables":1.0}}
+  ]
+}
