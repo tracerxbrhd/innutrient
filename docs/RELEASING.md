@@ -22,7 +22,7 @@ If U-API is private, `U_API_REPOSITORY_TOKEN` must grant read access. Project ID
 
 ## Local verification
 
-From the repository root, after committing and pushing `master`:
+From the repository root, after committing and pushing `port/26.2`:
 
 ```powershell
 .\scripts\release.ps1 -DryRun
@@ -32,20 +32,20 @@ This verifies the clean and synchronized repository, version metadata, absent ta
 
 ## Publishing
 
-Stable release:
+Release using the channel inferred from `mod_version`:
 
 ```powershell
 .\scripts\release.ps1
 ```
 
-Pre-release channels:
+An explicit channel can be supplied as a consistency check:
 
 ```powershell
 .\scripts\release.ps1 -Channel beta
 .\scripts\release.ps1 -Channel alpha
 ```
 
-The script creates and pushes an annotated tag only after all checks pass. For version `0.1.0` and Minecraft `1.21.1`, the stable tag is `v0.1.0+mc1.21.1`.
+The script creates and pushes an annotated tag only after all checks pass. For version `0.2.0-beta.1` and Minecraft `26.2`, the tag is `v0.2.0-beta.1+mc26.2` and the publishing channel is `beta`.
 
 GitHub Actions then:
 

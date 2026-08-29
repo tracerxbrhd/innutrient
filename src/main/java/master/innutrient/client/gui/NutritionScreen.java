@@ -13,10 +13,10 @@ import master.innutrient.network.NutritionRequestPayload;
 import master.innutrient.nutrition.NutritionService;
 import master.innutrient.player.NutritionAttachments;
 import master.innutrient.player.NutritionState;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.minecraft.resources.Identifier;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -77,14 +77,14 @@ public final class NutritionScreen extends UIScreen implements UApiTabHost {
     @Override
     protected void initScreen() {
         if (requestCatalog && minecraft != null && minecraft.getConnection() != null)
-            PacketDistributor.sendToServer(NutritionRequestPayload.INSTANCE);
+            ClientPacketDistributor.sendToServer(NutritionRequestPayload.INSTANCE);
     }
 
     @Override
     protected void tickScreen() {
         if (minecraft == null) return;
         if (ClientNutritionCatalog.revision() != catalogRevision) {
-            minecraft.setScreen(new NutritionScreen(false));
+            minecraft.setScreenAndShow(new NutritionScreen(false));
             return;
         }
         NutritionState state = minecraft.player == null ? NutritionState.empty()
@@ -96,14 +96,14 @@ public final class NutritionScreen extends UIScreen implements UApiTabHost {
     }
 
     @Override
-    protected void renderScreen(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    protected void renderScreen(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         for (NutrientRow row : rows) {
             if (row.bounds().contains(mouseX, mouseY) && row.bounds().intersects(scroll.bounds())) {
-                graphics.renderTooltip(font, row.tooltip(), Optional.empty(), mouseX, mouseY);
+                graphics.setTooltipForNextFrame(font, row.tooltip(), Optional.empty(), mouseX, mouseY);
                 break;
             }
         }
-        if (rows.isEmpty()) graphics.drawCenteredString(font,
+        if (rows.isEmpty()) graphics.centeredText(font,
             Component.translatable("screen.innutrient.no_groups"), width / 2, height / 2, 0xFFE0E0E0);
     }
 
@@ -117,7 +117,7 @@ public final class NutritionScreen extends UIScreen implements UApiTabHost {
         return (height - panelHeight) / 2;
     }
 
-    @Override public ResourceLocation uApiTabId() { return Innutrient.id("nutrition"); }
+    @Override public Identifier uApiTabId() { return Innutrient.id("nutrition"); }
     @Override public int uApiTabLeft() { return panelLeft(); }
     @Override public int uApiTabTop() { return Math.max(1, panelTop() - 25); }
 }

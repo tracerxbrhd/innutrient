@@ -6,7 +6,7 @@ Discover the service through U-API:
 NutritionApi.find().ifPresent(api -> {
     NutritionProfile profile = api.getNutritionProfile(stack);
     double protein = api.getNutritionLevel(player,
-        ResourceLocation.parse("innutrient:proteins"));
+        Identifier.parse("innutrient:proteins"));
     double balance = api.getBalanceScore(player);
 });
 ```
@@ -14,7 +14,7 @@ NutritionApi.find().ifPresent(api -> {
 Available operations:
 
 - `getNutritionProfile(ItemStack)`
-- `getNutritionLevel(ServerPlayer, ResourceLocation)`
+- `getNutritionLevel(ServerPlayer, Identifier)`
 - `getAllNutritionLevels(ServerPlayer)`
 - `getBalanceScore(ServerPlayer)`
 - `registerRecipeResolver(NutritionRecipeResolver)`

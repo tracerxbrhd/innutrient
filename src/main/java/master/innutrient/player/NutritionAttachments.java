@@ -13,7 +13,7 @@ public final class NutritionAttachments {
 
     public static final DeferredHolder<AttachmentType<?>, AttachmentType<NutritionState>> STATE = TYPES.register(
         "player_nutrition", () -> AttachmentType.builder(NutritionState::empty)
-            .serialize(NutritionState.CODEC)
+            .serialize(NutritionState.CODEC.fieldOf("data"))
             .sync((holder, player) -> holder == player, NutritionState.STREAM_CODEC)
             .build());
 

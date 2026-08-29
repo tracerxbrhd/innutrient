@@ -9,7 +9,7 @@ import master.innutrient.nutrition.NutrientGroup;
 import master.innutrient.nutrition.NutritionProfile;
 import master.innutrient.nutrition.NutritionProfileSource;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.item.ItemStack;
@@ -35,7 +35,7 @@ public final class NutritionRegistry {
 
     public static void reload(ResourceManager manager) {
         long started = System.nanoTime();
-        Map<ResourceLocation, NutrientGroup> groups = loadGroups(manager);
+        Map<Identifier, NutrientGroup> groups = loadGroups(manager);
         List<FoodProfileRule> profiles = loadProfiles(manager, groups);
         List<NutritionEffectRule> effects = loadEffects(manager, groups);
         List<NutrientGroup> ordered = groups.values().stream()
@@ -50,7 +50,7 @@ public final class NutritionRegistry {
         return snapshot.groups();
     }
 
-    public static Optional<NutrientGroup> group(ResourceLocation id) {
+    public static Optional<NutrientGroup> group(Identifier id) {
         return Optional.ofNullable(snapshot.byId().get(id));
     }
 
@@ -59,7 +59,7 @@ public final class NutritionRegistry {
     }
 
     public static ExplicitResolution explicit(ItemStack stack) {
-        Map<ResourceLocation, Double> values = new LinkedHashMap<>();
+        Map<Identifier, Double> values = new LinkedHashMap<>();
         boolean matched = false;
         boolean disabled = false;
         for (FoodProfileRule rule : snapshot.profiles()) {
@@ -75,7 +75,7 @@ public final class NutritionRegistry {
     }
 
     public static NutritionProfile directTags(ItemStack stack) {
-        Map<ResourceLocation, Double> values = new LinkedHashMap<>();
+        Map<Identifier, Double> values = new LinkedHashMap<>();
         for (NutrientGroup group : snapshot.groups()) {
             var key = net.minecraft.tags.TagKey.create(net.minecraft.core.registries.Registries.ITEM, group.itemTag());
             if (stack.is(key)) values.put(group.id(), 1.0);
@@ -84,10 +84,10 @@ public final class NutritionRegistry {
             : NutritionProfile.of(values, NutritionProfileSource.DIRECT_TAGS);
     }
 
-    private static Map<ResourceLocation, NutrientGroup> loadGroups(ResourceManager manager) {
-        Map<ResourceLocation, NutrientGroup> loaded = new LinkedHashMap<>();
-        for (Map.Entry<ResourceLocation, Resource> entry : jsonResources(manager, GROUP_ROOT).entrySet()) {
-            ResourceLocation id = logicalId(entry.getKey(), GROUP_ROOT);
+    private static Map<Identifier, NutrientGroup> loadGroups(ResourceManager manager) {
+        Map<Identifier, NutrientGroup> loaded = new LinkedHashMap<>();
+        for (Map.Entry<Identifier, Resource> entry : jsonResources(manager, GROUP_ROOT).entrySet()) {
+            Identifier id = logicalId(entry.getKey(), GROUP_ROOT);
             try (Reader reader = entry.getValue().openAsReader()) {
                 JsonObject root = object(JsonParser.parseReader(reader), "root");
                 requireFormat(root);
@@ -100,10 +100,10 @@ public final class NutritionRegistry {
     }
 
     private static List<FoodProfileRule> loadProfiles(ResourceManager manager,
-                                                       Map<ResourceLocation, NutrientGroup> groups) {
+                                                       Map<Identifier, NutrientGroup> groups) {
         List<FoodProfileRule> loaded = new ArrayList<>();
-        for (Map.Entry<ResourceLocation, Resource> entry : jsonResources(manager, PROFILE_ROOT).entrySet()) {
-            ResourceLocation id = logicalId(entry.getKey(), PROFILE_ROOT);
+        for (Map.Entry<Identifier, Resource> entry : jsonResources(manager, PROFILE_ROOT).entrySet()) {
+            Identifier id = logicalId(entry.getKey(), PROFILE_ROOT);
             try (Reader reader = entry.getValue().openAsReader()) {
                 JsonObject root = object(JsonParser.parseReader(reader), "root");
                 requireFormat(root);
@@ -128,10 +128,10 @@ public final class NutritionRegistry {
     }
 
     private static List<NutritionEffectRule> loadEffects(ResourceManager manager,
-                                                           Map<ResourceLocation, NutrientGroup> groups) {
+                                                           Map<Identifier, NutrientGroup> groups) {
         List<NutritionEffectRule> loaded = new ArrayList<>();
-        for (Map.Entry<ResourceLocation, Resource> entry : jsonResources(manager, EFFECT_ROOT).entrySet()) {
-            ResourceLocation id = logicalId(entry.getKey(), EFFECT_ROOT);
+        for (Map.Entry<Identifier, Resource> entry : jsonResources(manager, EFFECT_ROOT).entrySet()) {
+            Identifier id = logicalId(entry.getKey(), EFFECT_ROOT);
             try (Reader reader = entry.getValue().openAsReader()) {
                 JsonObject root = object(JsonParser.parseReader(reader), "root");
                 requireFormat(root);
@@ -147,13 +147,13 @@ public final class NutritionRegistry {
         return List.copyOf(loaded);
     }
 
-    private static NutrientGroup parseGroup(ResourceLocation id, JsonObject root) {
+    private static NutrientGroup parseGroup(Identifier id, JsonObject root) {
         double healthyMin = number(root, "healthy_min", 40);
         double healthyMax = number(root, "healthy_max", 80);
         return new NutrientGroup(id,
             string(root, "translation_key", "nutrient." + id.getNamespace() + "." + id.getPath().replace('/', '.')),
-            ResourceLocation.parse(string(root, "icon", "minecraft:apple")),
-            ResourceLocation.parse(string(root, "item_tag", id.getNamespace() + ":foods/" + id.getPath())),
+            Identifier.parse(string(root, "icon", "minecraft:apple")),
+            Identifier.parse(string(root, "item_tag", id.getNamespace() + ":foods/" + id.getPath())),
             color(root, "color", 0xFFFFFF), integer(root, "order", 0),
             number(root, "default_level", 50), healthyMin, healthyMax,
             number(root, "low_threshold", Math.min(healthyMin, 20)),
@@ -163,14 +163,14 @@ public final class NutritionRegistry {
             bool(root, "required_for_balance", true));
     }
 
-    private static FoodProfileRule parseProfile(ResourceLocation id, int index, JsonObject root,
-                                                 Map<ResourceLocation, NutrientGroup> groups) {
-        ResourceLocation item = root.has("item") ? ResourceLocation.parse(root.get("item").getAsString()) : null;
-        ResourceLocation tag = root.has("tag") ? ResourceLocation.parse(root.get("tag").getAsString()) : null;
+    private static FoodProfileRule parseProfile(Identifier id, int index, JsonObject root,
+                                                 Map<Identifier, NutrientGroup> groups) {
+        Identifier item = root.has("item") ? Identifier.parse(root.get("item").getAsString()) : null;
+        Identifier tag = root.has("tag") ? Identifier.parse(root.get("tag").getAsString()) : null;
         if (item != null && !BuiltInRegistries.ITEM.containsKey(item))
             throw new IllegalArgumentException("unknown item " + item);
         JsonObject nutrientObject = root.has("nutrients") ? object(root.get("nutrients"), "nutrients") : new JsonObject();
-        Map<ResourceLocation, Double> nutrients = parseNutrients(nutrientObject, groups);
+        Map<Identifier, Double> nutrients = parseNutrients(nutrientObject, groups);
         FoodProfileRule.Mode mode = FoodProfileRule.Mode.valueOf(
             string(root, "mode", "replace").toUpperCase(Locale.ROOT));
         boolean disableAutomatic = bool(root, "disable_automatic", false);
@@ -180,11 +180,11 @@ public final class NutritionRegistry {
             integer(root, "priority", 0), disableAutomatic);
     }
 
-    private static Map<ResourceLocation, Double> parseNutrients(JsonObject object,
-                                                                 Map<ResourceLocation, NutrientGroup> groups) {
-        Map<ResourceLocation, Double> values = new LinkedHashMap<>();
+    private static Map<Identifier, Double> parseNutrients(JsonObject object,
+                                                                 Map<Identifier, NutrientGroup> groups) {
+        Map<Identifier, Double> values = new LinkedHashMap<>();
         object.entrySet().forEach(entry -> {
-            ResourceLocation id = ResourceLocation.parse(entry.getKey());
+            Identifier id = Identifier.parse(entry.getKey());
             if (!groups.containsKey(id)) throw new IllegalArgumentException("unknown nutrient " + id);
             double value = entry.getValue().getAsDouble();
             if (!Double.isFinite(value) || value < 0) throw new IllegalArgumentException("invalid weight for " + id);
@@ -194,13 +194,13 @@ public final class NutritionRegistry {
         return NutritionProfile.normalize(values);
     }
 
-    private static NutritionEffectRule parseEffect(ResourceLocation id, JsonObject root,
-                                                     Map<ResourceLocation, NutrientGroup> groups) {
+    private static NutritionEffectRule parseEffect(Identifier id, JsonObject root,
+                                                     Map<Identifier, NutrientGroup> groups) {
         JsonObject condition = object(root.get("condition"), "condition");
         NutritionEffectRule.ConditionType type = NutritionEffectRule.ConditionType.valueOf(
             string(condition, "type", "all_healthy").toUpperCase(Locale.ROOT));
-        ResourceLocation group = condition.has("group")
-            ? ResourceLocation.parse(condition.get("group").getAsString()) : null;
+        Identifier group = condition.has("group")
+            ? Identifier.parse(condition.get("group").getAsString()) : null;
         if (group != null && !groups.containsKey(group)) throw new IllegalArgumentException("unknown nutrient " + group);
         if ((type == NutritionEffectRule.ConditionType.GROUP_BELOW
             || type == NutritionEffectRule.ConditionType.GROUP_ABOVE) && group == null)
@@ -208,19 +208,19 @@ public final class NutritionRegistry {
         JsonObject effect = object(root.get("effect"), "effect");
         return new NutritionEffectRule(id, type, group, number(condition, "threshold", 20),
             Math.max(1, integer(condition, "count", 1)),
-            ResourceLocation.parse(string(effect, "id", "minecraft:weakness")),
+            Identifier.parse(string(effect, "id", "minecraft:weakness")),
             Math.max(20, integer(effect, "duration_ticks", 240)),
             Math.max(0, integer(effect, "amplifier", 0)), bool(root, "beneficial", false),
             bool(effect, "ambient", true), bool(effect, "show_particles", false));
     }
 
-    private static Map<ResourceLocation, Resource> jsonResources(ResourceManager manager, String root) {
+    private static Map<Identifier, Resource> jsonResources(ResourceManager manager, String root) {
         return manager.listResources(root, id -> id.getPath().endsWith(".json"));
     }
 
-    private static ResourceLocation logicalId(ResourceLocation file, String root) {
+    private static Identifier logicalId(Identifier file, String root) {
         String path = file.getPath().substring(root.length() + 1, file.getPath().length() - 5);
-        return ResourceLocation.fromNamespaceAndPath(file.getNamespace(), path);
+        return Identifier.fromNamespaceAndPath(file.getNamespace(), path);
     }
 
     private static void requireFormat(JsonObject root) {
@@ -271,6 +271,6 @@ public final class NutritionRegistry {
 
     public record ExplicitResolution(boolean matched, NutritionProfile profile, boolean disableAutomatic) {}
 
-    private record Snapshot(List<NutrientGroup> groups, Map<ResourceLocation, NutrientGroup> byId,
+    private record Snapshot(List<NutrientGroup> groups, Map<Identifier, NutrientGroup> byId,
                             List<FoodProfileRule> profiles, List<NutritionEffectRule> effects) {}
 }

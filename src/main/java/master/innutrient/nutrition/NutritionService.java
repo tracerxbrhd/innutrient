@@ -3,7 +3,7 @@ package master.innutrient.nutrition;
 import master.innutrient.player.NutritionAttachments;
 import master.innutrient.player.NutritionState;
 import master.innutrient.registry.NutritionRegistry;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.food.FoodProperties;
 
@@ -21,7 +21,7 @@ public final class NutritionService {
         return reconciled;
     }
 
-    public static boolean set(ServerPlayer player, ResourceLocation groupId, double value) {
+    public static boolean set(ServerPlayer player, Identifier groupId, double value) {
         NutrientGroup group = NutritionRegistry.group(groupId).orElse(null);
         if (group == null || !Double.isFinite(value)) return false;
         NutritionState current = get(player);
@@ -30,7 +30,7 @@ public final class NutritionService {
         return true;
     }
 
-    public static boolean add(ServerPlayer player, ResourceLocation groupId, double amount) {
+    public static boolean add(ServerPlayer player, Identifier groupId, double amount) {
         NutrientGroup group = NutritionRegistry.group(groupId).orElse(null);
         if (group == null || !Double.isFinite(amount)) return false;
         NutritionState current = get(player);
@@ -64,9 +64,9 @@ public final class NutritionService {
         update(player, changed, false);
     }
 
-    public static Map<ResourceLocation, Double> levels(ServerPlayer player) {
+    public static Map<Identifier, Double> levels(ServerPlayer player) {
         NutritionState state = get(player);
-        Map<ResourceLocation, Double> values = new LinkedHashMap<>();
+        Map<Identifier, Double> values = new LinkedHashMap<>();
         for (NutrientGroup group : NutritionRegistry.groups()) values.put(group.id(), state.get(group));
         return Map.copyOf(values);
     }

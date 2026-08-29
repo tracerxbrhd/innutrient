@@ -19,7 +19,7 @@ public final class NutritionNetwork {
             (payload, context) -> context.enqueueWork(() -> {
                 if (context.player() instanceof ServerPlayer player) syncCatalog(player);
             }));
-        if (FMLEnvironment.dist == Dist.CLIENT) {
+        if (FMLEnvironment.getDist() == Dist.CLIENT) {
             registrar.playToClient(NutritionCatalogPayload.TYPE, NutritionCatalogPayload.STREAM_CODEC,
                 (payload, context) -> context.enqueueWork(() -> ClientNutritionCatalog.replace(payload)));
         } else {

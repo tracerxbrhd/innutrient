@@ -55,13 +55,13 @@ final class NutrientRow extends UIComponent {
         context.graphics().fill(x, bounds().bottom() - 1, bounds().right(), bounds().bottom(), border);
         context.graphics().fill(x, y, x + 1, bounds().bottom(), border);
         context.graphics().fill(bounds().right() - 1, y, bounds().right(), bounds().bottom(), border);
-        context.graphics().renderItem(icon, x + 6, y + 10);
+        context.graphics().item(icon, x + 6, y + 10);
 
         Component name = Component.translatable(group.translationKey());
-        context.graphics().drawString(context.font(), name, x + 28, y + 5, 0xFFF4F4F4, true);
+        context.graphics().text(context.font(), name, x + 28, y + 5, 0xFFF4F4F4, true);
         if (InnutrientClientConfig.SHOW_PERCENTAGES.get()) {
             String percent = String.format(Locale.ROOT, "%.0f%%", value);
-            context.graphics().drawString(context.font(), percent,
+            context.graphics().text(context.font(), percent,
                 bounds().right() - context.font().width(percent) - 6, y + 5, 0xFFE8E8E8, true);
         }
 

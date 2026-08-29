@@ -6,14 +6,15 @@ import master.innutrient.config.InnutrientServerConfig;
 import master.innutrient.nutrition.NutritionProfile;
 import master.innutrient.nutrition.NutritionProfileSource;
 import master.innutrient.registry.NutritionRegistry;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeHolder;
+import net.minecraft.world.item.crafting.display.SlotDisplayContext;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,7 +31,7 @@ public final class NutritionResolver {
 
     private final Map<Item, NutritionProfile> cache = new ConcurrentHashMap<>();
     private volatile Map<Item, List<RecipeHolder<?>>> recipesByOutput = Map.of();
-    private volatile Map<ResourceLocation, NutritionProfile> edibleSnapshot = Map.of();
+    private volatile Map<Identifier, NutritionProfile> edibleSnapshot = Map.of();
     private volatile long lastRebuildMillis;
     private volatile int unresolvedEdibleItems;
 
@@ -44,12 +45,18 @@ public final class NutritionResolver {
     public synchronized void rebuild(MinecraftServer server) {
         long started = System.nanoTime();
         Map<Item, List<RecipeHolder<?>>> index = new IdentityHashMap<>();
+        var displayContext = SlotDisplayContext.fromLevel(server.overworld());
         server.getRecipeManager().getRecipes().stream()
-            .sorted(Comparator.comparing(value -> value.id().toString()))
+            .sorted(Comparator.comparing(value -> value.id().identifier().toString()))
             .forEach(holder -> {
                 try {
-                    ItemStack result = holder.value().getResultItem(server.registryAccess());
-                    if (!result.isEmpty()) index.computeIfAbsent(result.getItem(), ignored -> new ArrayList<>()).add(holder);
+                    holder.value().display().stream()
+                        .flatMap(display -> display.result().resolveForStacks(displayContext).stream())
+                        .filter(result -> !result.isEmpty())
+                        .forEach(result -> {
+                            List<RecipeHolder<?>> recipes = index.computeIfAbsent(result.getItem(), ignored -> new ArrayList<>());
+                            if (!recipes.contains(holder)) recipes.add(holder);
+                        });
                 } catch (RuntimeException exception) {
                     Innutrient.LOGGER.debug("Recipe {} cannot expose a nutrition result: {}", holder.id(), exception.getMessage());
                 }
@@ -59,7 +66,7 @@ public final class NutritionResolver {
         recipesByOutput = Map.copyOf(immutableIndex);
         cache.clear();
 
-        Map<ResourceLocation, NutritionProfile> edible = new LinkedHashMap<>();
+        Map<Identifier, NutritionProfile> edible = new LinkedHashMap<>();
         int unresolved = 0;
         int explicit = 0;
         int direct = 0;
@@ -86,7 +93,7 @@ public final class NutritionResolver {
             NutritionRegistry.groups().size(), explicit, direct, derived, unresolved, lastRebuildMillis);
     }
 
-    public Map<ResourceLocation, NutritionProfile> edibleProfiles() {
+    public Map<Identifier, NutritionProfile> edibleProfiles() {
         return edibleSnapshot;
     }
 
@@ -130,7 +137,7 @@ public final class NutritionResolver {
             for (ResolvedRecipe recipe : resolved) {
                 maxDepth = Math.max(maxDepth, recipe.depth());
             }
-            ResourceLocation representative = resolved.getFirst().recipeId();
+            Identifier representative = resolved.getFirst().recipeId();
             return cache(item, NutritionProfile.recipe(
                 NutritionProfile.averageNutrients(resolved.stream().map(ResolvedRecipe::values).toList()),
                 representative, Math.max(1, maxDepth - depth + 1)));
@@ -153,7 +160,7 @@ public final class NutritionResolver {
             }
         }
         if (ingredients == null || ingredients.isEmpty()) return null;
-        List<Map<ResourceLocation, Double>> resolvedIngredients = new ArrayList<>();
+        List<Map<Identifier, Double>> resolvedIngredients = new ArrayList<>();
         int maxDepth = depth;
         for (Ingredient ingredient : ingredients) {
             IngredientProfile profile = resolveIngredient(ingredient, depth + 1, guard);
@@ -162,19 +169,21 @@ public final class NutritionResolver {
             maxDepth = Math.max(maxDepth, profile.depth());
         }
         if (resolvedIngredients.isEmpty()) return null;
-        return new ResolvedRecipe(holder.id(), NutritionProfile.averageNutrients(resolvedIngredients), maxDepth + 1);
+        return new ResolvedRecipe(holder.id().identifier(), NutritionProfile.averageNutrients(resolvedIngredients), maxDepth + 1);
     }
 
     private IngredientProfile resolveIngredient(Ingredient ingredient, int depth, ResolutionGuard<Item> guard) {
-        ItemStack[] alternatives;
+        List<ItemStack> ordered;
         try {
-            alternatives = ingredient.getItems();
+            var items = ingredient.isCustom()
+                ? java.util.Objects.requireNonNull(ingredient.getCustomIngredient()).items()
+                : ingredient.getValues().stream();
+            ordered = items.map(holder -> holder.value().getDefaultInstance()).filter(stack -> !stack.isEmpty())
+                .sorted(Comparator.comparing(stack -> BuiltInRegistries.ITEM.getKey(stack.getItem()).toString()))
+                .limit(InnutrientServerConfig.MAX_INGREDIENT_ALTERNATIVES.get()).toList();
         } catch (RuntimeException exception) {
             return new IngredientProfile(Map.of(), depth);
         }
-        List<ItemStack> ordered = java.util.Arrays.stream(alternatives).filter(stack -> !stack.isEmpty())
-            .sorted(Comparator.comparing(stack -> BuiltInRegistries.ITEM.getKey(stack.getItem()).toString()))
-            .limit(InnutrientServerConfig.MAX_INGREDIENT_ALTERNATIVES.get()).toList();
         List<NutritionProfile> profiles = new ArrayList<>();
         int maxDepth = depth;
         for (ItemStack alternative : ordered) {
@@ -194,14 +203,9 @@ public final class NutritionResolver {
     }
 
     private static boolean isFood(ItemStack stack) {
-        try {
-            FoodProperties properties = stack.getFoodProperties(null);
-            return properties != null;
-        } catch (RuntimeException ignored) {
-            return false;
-        }
+        return stack.get(DataComponents.FOOD) != null;
     }
 
-    private record IngredientProfile(Map<ResourceLocation, Double> values, int depth) {}
-    private record ResolvedRecipe(ResourceLocation recipeId, Map<ResourceLocation, Double> values, int depth) {}
+    private record IngredientProfile(Map<Identifier, Double> values, int depth) {}
+    private record ResolvedRecipe(Identifier recipeId, Map<Identifier, Double> values, int depth) {}
 }

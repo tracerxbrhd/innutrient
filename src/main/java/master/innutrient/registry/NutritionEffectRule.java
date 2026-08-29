@@ -3,17 +3,17 @@ package master.innutrient.registry;
 import master.innutrient.nutrition.NutrientGroup;
 import master.innutrient.nutrition.NutrientStatus;
 import master.innutrient.player.NutritionState;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.List;
 
 public record NutritionEffectRule(
-    ResourceLocation id,
+    Identifier id,
     ConditionType condition,
-    ResourceLocation group,
+    Identifier group,
     double threshold,
     int count,
-    ResourceLocation effect,
+    Identifier effect,
     int durationTicks,
     int amplifier,
     boolean beneficial,

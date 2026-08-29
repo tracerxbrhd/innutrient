@@ -7,15 +7,18 @@ pluginManagement {
 }
 
 plugins {
-    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.8.0'
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
 }
 
 rootProject.name = 'innutrient'
 
+def configuredUApiPath = providers.gradleProperty('u_api_local_path').orNull
+def configuredUApiBuild = configuredUApiPath ? file(configuredUApiPath) : null
 def localUApiBuild = file('u-api')
-def siblingUApiBuild = file('../u-api')
-def uApiBuild = localUApiBuild.isDirectory() ? localUApiBuild
-    : (siblingUApiBuild.isDirectory() ? siblingUApiBuild : null)
+def siblingPortBuild = file('../u-api-26.2')
+def uApiBuild = configuredUApiBuild != null && configuredUApiBuild.isDirectory() ? configuredUApiBuild
+    : (localUApiBuild.isDirectory() ? localUApiBuild
+    : (siblingPortBuild.isDirectory() ? siblingPortBuild : null))
 
 if (uApiBuild != null) {
     includeBuild(uApiBuild) {

@@ -5,7 +5,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import master.innutrient.nutrition.NutrientGroup;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.LinkedHashMap;
 import java.util.Collections;
@@ -13,10 +13,10 @@ import java.util.List;
 import java.util.Map;
 
 /** Versioned player attachment. Removed group IDs remain harmlessly preserved for datapack rollback. */
-public record NutritionState(int dataVersion, Map<ResourceLocation, Double> levels) {
+public record NutritionState(int dataVersion, Map<Identifier, Double> levels) {
     public static final int DATA_VERSION = 1;
-    private static final Codec<Map<ResourceLocation, Double>> LEVELS_CODEC =
-        Codec.unboundedMap(ResourceLocation.CODEC, Codec.DOUBLE);
+    private static final Codec<Map<Identifier, Double>> LEVELS_CODEC =
+        Codec.unboundedMap(Identifier.CODEC, Codec.DOUBLE);
     public static final Codec<NutritionState> CODEC = RecordCodecBuilder.create(instance -> instance.group(
         Codec.INT.optionalFieldOf("data_version", DATA_VERSION).forGetter(NutritionState::dataVersion),
         LEVELS_CODEC.optionalFieldOf("levels", Map.of()).forGetter(NutritionState::levels)
@@ -26,9 +26,9 @@ public record NutritionState(int dataVersion, Map<ResourceLocation, Double> leve
         public NutritionState decode(RegistryFriendlyByteBuf buffer) {
             int version = buffer.readVarInt();
             int size = Math.min(4096, Math.max(0, buffer.readVarInt()));
-            Map<ResourceLocation, Double> values = new LinkedHashMap<>();
+            Map<Identifier, Double> values = new LinkedHashMap<>();
             for (int index = 0; index < size; index++)
-                values.put(buffer.readResourceLocation(), NutrientGroup.clamp(buffer.readDouble()));
+                values.put(buffer.readIdentifier(), NutrientGroup.clamp(buffer.readDouble()));
             return new NutritionState(version, values);
         }
 
@@ -37,14 +37,14 @@ public record NutritionState(int dataVersion, Map<ResourceLocation, Double> leve
             buffer.writeVarInt(state.dataVersion());
             buffer.writeVarInt(state.levels().size());
             state.levels().forEach((id, value) -> {
-                buffer.writeResourceLocation(id);
+                buffer.writeIdentifier(id);
                 buffer.writeDouble(value);
             });
         }
     };
 
     public NutritionState {
-        Map<ResourceLocation, Double> sanitized = new LinkedHashMap<>();
+        Map<Identifier, Double> sanitized = new LinkedHashMap<>();
         if (levels != null) levels.forEach((id, value) -> {
             if (id != null && value != null && Double.isFinite(value)) sanitized.put(id, NutrientGroup.clamp(value));
         });
@@ -60,7 +60,7 @@ public record NutritionState(int dataVersion, Map<ResourceLocation, Double> leve
     }
 
     public NutritionState set(NutrientGroup group, double value) {
-        Map<ResourceLocation, Double> changed = new LinkedHashMap<>(levels);
+        Map<Identifier, Double> changed = new LinkedHashMap<>(levels);
         changed.put(group.id(), NutrientGroup.clamp(value));
         return new NutritionState(DATA_VERSION, changed);
     }
@@ -71,7 +71,7 @@ public record NutritionState(int dataVersion, Map<ResourceLocation, Double> leve
     }
 
     public NutritionState reconcile(List<NutrientGroup> groups) {
-        Map<ResourceLocation, Double> changed = new LinkedHashMap<>(levels);
+        Map<Identifier, Double> changed = new LinkedHashMap<>(levels);
         boolean dirty = dataVersion != DATA_VERSION;
         for (NutrientGroup group : groups) {
             if (!changed.containsKey(group.id())) {
@@ -83,7 +83,7 @@ public record NutritionState(int dataVersion, Map<ResourceLocation, Double> leve
     }
 
     public NutritionState reset(List<NutrientGroup> groups) {
-        Map<ResourceLocation, Double> reset = new LinkedHashMap<>(levels);
+        Map<Identifier, Double> reset = new LinkedHashMap<>(levels);
         for (NutrientGroup group : groups) reset.put(group.id(), group.defaultLevel());
         return new NutritionState(DATA_VERSION, reset);
     }

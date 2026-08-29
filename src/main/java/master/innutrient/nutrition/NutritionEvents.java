@@ -5,6 +5,7 @@ import master.innutrient.network.NutritionNetwork;
 import master.innutrient.nutrition.resolver.NutritionResolver;
 import master.innutrient.player.NutritionAttachments;
 import master.innutrient.player.NutritionState;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.food.FoodProperties;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -25,7 +26,7 @@ public final class NutritionEvents {
     @SubscribeEvent
     public static void onFoodFinished(LivingEntityUseItemEvent.Finish event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
-        FoodProperties food = event.getItem().getFoodProperties(player);
+        FoodProperties food = event.getItem().get(DataComponents.FOOD);
         if (food == null) return;
         NutritionProfile profile = NutritionResolver.INSTANCE.resolve(event.getItem());
         NutritionService.consume(player, profile, food);

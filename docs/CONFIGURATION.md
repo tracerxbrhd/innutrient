@@ -17,7 +17,7 @@ Generated per world at `<world>/serverconfig/uapi/innutrient/server.toml`.
 - `resolution.maxRecipesPerOutput`: deterministic per-output recipe cap.
 - `effects.enableBonuses` / `effects.enablePenalties`: global effect-rule switches.
 
-For Minecraft 1.21.1, `FoodProperties.saturation()` is the absolute saturation restored, not the old saturation modifier. Innutrient therefore calculates:
+For Minecraft 26.2, `FoodProperties.saturation()` is the absolute saturation restored, not the old saturation modifier. Innutrient therefore calculates:
 
 ```text
 gain = (nutrition + saturation × 0.5) × globalMultiplier

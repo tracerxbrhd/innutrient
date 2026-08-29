@@ -1,7 +1,7 @@
 package master.innutrient.player;
 
 import master.innutrient.nutrition.NutrientGroup;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class NutritionStateTest {
     @Test
     void reconcileAddsNewGroupsAndPreservesRemovedValues() {
-        ResourceLocation removed = ResourceLocation.parse("oldpack:removed");
+        Identifier removed = Identifier.parse("oldpack:removed");
         NutrientGroup added = group("newpack:magic", 37.0);
         NutritionState reconciled = new NutritionState(0, Map.of(removed, 12.0)).reconcile(java.util.List.of(added));
         assertEquals(12.0, reconciled.levels().get(removed));
@@ -29,9 +29,9 @@ class NutritionStateTest {
     }
 
     private static NutrientGroup group(String id, double defaultValue) {
-        ResourceLocation location = ResourceLocation.parse(id);
-        return new NutrientGroup(location, "test", ResourceLocation.parse("minecraft:apple"),
-            ResourceLocation.parse("innutrient:foods/test"), 0xFFFFFF, 0, defaultValue,
+        Identifier location = Identifier.parse(id);
+        return new NutrientGroup(location, "test", Identifier.parse("minecraft:apple"),
+            Identifier.parse("innutrient:foods/test"), 0xFFFFFF, 0, defaultValue,
             40, 80, 20, 90, 1, 1, true, false, true);
     }
 }

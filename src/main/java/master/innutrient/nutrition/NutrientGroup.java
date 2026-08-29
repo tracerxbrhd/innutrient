@@ -1,15 +1,15 @@
 package master.innutrient.nutrition;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.Objects;
 
 /** Immutable, datapack-defined nutrient metadata. */
 public record NutrientGroup(
-    ResourceLocation id,
+    Identifier id,
     String translationKey,
-    ResourceLocation icon,
-    ResourceLocation itemTag,
+    Identifier icon,
+    Identifier itemTag,
     int color,
     int order,
     double defaultLevel,

@@ -4,7 +4,7 @@ import master.innutrient.network.NutritionCatalogPayload;
 import master.innutrient.nutrition.NutrientGroup;
 import master.innutrient.nutrition.NutritionProfile;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
@@ -12,7 +12,7 @@ import java.util.Map;
 
 public final class ClientNutritionCatalog {
     private static volatile List<NutrientGroup> groups = List.of();
-    private static volatile Map<ResourceLocation, NutritionProfile> profiles = Map.of();
+    private static volatile Map<Identifier, NutritionProfile> profiles = Map.of();
     private static volatile long revision;
 
     private ClientNutritionCatalog() {}

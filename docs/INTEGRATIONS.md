@@ -2,15 +2,15 @@
 
 ## Farmer's Delight
 
-Farmer's Delight is optional and never loaded as a Java dependency.
+Farmer's Delight is not a declared dependency on the Minecraft 26.2 branch, and no 26.2 build has been runtime-validated.
 
 Current native support consists of:
 
 - curated optional tag entries for cabbage, tomato, onion, rice, dough, pasta, eggs, meat cuts, bacon, fish slices, ham, and mutton chops;
-- automatic analysis of Cooking Pot and Cutting Board recipes when they expose ordinary `Recipe#getIngredients()` data;
+- generic analysis of recipes when they expose ordinary `Recipe#placementInfo()` ingredients and `Recipe#display()` outputs;
 - recursive inheritance into meals assembled from those ingredients.
 
-This matches the Farmer's Delight 1.21 branch recipe format, where Cooking Pot recipes expose an ingredient array. Cutting recipes that expose only a primary result are resolved for that primary result; unusual extra outputs need a custom resolver or datapack override.
+These data entries are optional and harmless when the mod is absent. A future compatible 26.2 port can use the generic path when it exposes standard placement and display data; unusual extra outputs still need a custom resolver or datapack override.
 
 ## Adding another recipe system
 

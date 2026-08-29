@@ -4,14 +4,14 @@
 
 Innutrient is a configurable nutrition system for Minecraft that rewards a varied diet. Foods contribute to data-driven nutrient groups, and complex meals can inherit their composition from recipe ingredients.
 
-- Minecraft 1.21.1
+- Minecraft 26.2
 - NeoForge
-- Java 21
+- Java 25
 - Requires [U-API](https://github.com/tracerxbrhd/u-api)
 
 Modpack authors can add or replace nutrient groups, classify ingredients with item tags, define exact food profiles, tune gain and decay, and configure effects through datapacks and server configuration.
 
-Farmer's Delight is supported optionally through its exposed recipe ingredients and curated ingredient tags. Innutrient does not require or bundle Farmer's Delight.
+Recipe-based foods are supported generically through Minecraft's recipe placement and display APIs. Curated optional Farmer's Delight ingredient tags remain available, but no Farmer's Delight build for Minecraft 26.2 has been runtime-validated.
 
 Technical documentation lives in [`docs/`](docs/).
 

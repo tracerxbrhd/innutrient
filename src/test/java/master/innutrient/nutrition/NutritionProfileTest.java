@@ -1,6 +1,6 @@
 package master.innutrient.nutrition;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;
@@ -11,8 +11,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class NutritionProfileTest {
-    private static final ResourceLocation PROTEIN = ResourceLocation.parse("innutrient:proteins");
-    private static final ResourceLocation GRAIN = ResourceLocation.parse("innutrient:grains");
+    private static final Identifier PROTEIN = Identifier.parse("innutrient:proteins");
+    private static final Identifier GRAIN = Identifier.parse("innutrient:grains");
 
     @Test
     void normalizesPositiveWeights() {
@@ -24,7 +24,7 @@ class NutritionProfileTest {
 
     @Test
     void rejectsInvalidContributionsWithoutProducingNan() {
-        Map<ResourceLocation, Double> input = new LinkedHashMap<>();
+        Map<Identifier, Double> input = new LinkedHashMap<>();
         input.put(PROTEIN, Double.NaN);
         input.put(GRAIN, -1.0);
         assertTrue(NutritionProfile.normalize(input).isEmpty());
@@ -32,10 +32,10 @@ class NutritionProfileTest {
 
     @Test
     void recipeIngredientCompositionIsOrderIndependent() {
-        Map<ResourceLocation, Double> first = new LinkedHashMap<>();
+        Map<Identifier, Double> first = new LinkedHashMap<>();
         first.merge(PROTEIN, 1.0, Double::sum);
         first.merge(GRAIN, 1.0, Double::sum);
-        Map<ResourceLocation, Double> second = new LinkedHashMap<>();
+        Map<Identifier, Double> second = new LinkedHashMap<>();
         second.merge(GRAIN, 1.0, Double::sum);
         second.merge(PROTEIN, 1.0, Double::sum);
         assertEquals(NutritionProfile.normalize(first), NutritionProfile.normalize(second));
@@ -43,8 +43,8 @@ class NutritionProfileTest {
 
     @Test
     void recipeIngredientsAndAlternativesCombineEvenly() {
-        ResourceLocation vegetables = ResourceLocation.parse("innutrient:vegetables");
-        Map<ResourceLocation, Double> result = NutritionProfile.averageNutrients(List.of(
+        Identifier vegetables = Identifier.parse("innutrient:vegetables");
+        Map<Identifier, Double> result = NutritionProfile.averageNutrients(List.of(
             Map.of(GRAIN, 1.0),
             Map.of(PROTEIN, 0.5, vegetables, 0.5),
             Map.of()

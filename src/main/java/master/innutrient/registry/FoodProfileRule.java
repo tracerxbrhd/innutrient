@@ -3,18 +3,18 @@ package master.innutrient.registry;
 import master.innutrient.nutrition.NutritionProfile;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.Map;
 
 public record FoodProfileRule(
-    ResourceLocation definitionId,
+    Identifier definitionId,
     int entryIndex,
-    ResourceLocation item,
-    ResourceLocation tag,
-    Map<ResourceLocation, Double> nutrients,
+    Identifier item,
+    Identifier tag,
+    Map<Identifier, Double> nutrients,
     Mode mode,
     int priority,
     boolean disableAutomatic

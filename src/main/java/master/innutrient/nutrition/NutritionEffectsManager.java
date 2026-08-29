@@ -15,7 +15,7 @@ public final class NutritionEffectsManager {
             if (rule.beneficial() && !InnutrientServerConfig.ENABLE_BONUSES.get()) continue;
             if (!rule.beneficial() && !InnutrientServerConfig.ENABLE_PENALTIES.get()) continue;
             if (!rule.matches(state, NutritionRegistry.groups())) continue;
-            BuiltInRegistries.MOB_EFFECT.getHolder(rule.effect()).ifPresent(effect -> player.addEffect(
+            BuiltInRegistries.MOB_EFFECT.get(rule.effect()).ifPresent(effect -> player.addEffect(
                 new MobEffectInstance(effect, rule.durationTicks(), rule.amplifier(), rule.ambient(),
                     rule.showParticles(), true)));
         }

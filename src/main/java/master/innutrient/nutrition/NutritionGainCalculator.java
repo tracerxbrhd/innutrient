@@ -3,7 +3,7 @@ package master.innutrient.nutrition;
 import master.innutrient.config.InnutrientServerConfig;
 import net.minecraft.world.food.FoodProperties;
 
-/** Centralized 1.21.1 formula. FoodProperties.saturation() is already an absolute restored amount. */
+/** Centralized gain formula. FoodProperties.saturation() is already an absolute restored amount. */
 public final class NutritionGainCalculator {
     private NutritionGainCalculator() {}
 

@@ -18,7 +18,7 @@ import master.innutrient.nutrition.resolver.NutritionResolver;
 import master.innutrient.player.NutritionAttachments;
 import master.innutrient.registry.NutritionRegistry;
 import master.innutrient.registry.NutritionReloadListener;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -64,7 +64,7 @@ public final class Innutrient {
         event.enqueueWork(FarmersDelightIntegration::report);
     }
 
-    public static ResourceLocation id(String path) {
-        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+    public static Identifier id(String path) {
+        return Identifier.fromNamespaceAndPath(MOD_ID, path);
     }
 }

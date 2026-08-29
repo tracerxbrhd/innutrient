@@ -1,7 +1,7 @@
 package master.innutrient.nutrition;
 
 import master.innutrient.player.NutritionState;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -21,9 +21,9 @@ class NutritionServiceTest {
     }
 
     private static NutrientGroup group(String path) {
-        ResourceLocation id = ResourceLocation.fromNamespaceAndPath("innutrient", path);
-        return new NutrientGroup(id, "test", ResourceLocation.parse("minecraft:apple"),
-            ResourceLocation.fromNamespaceAndPath("innutrient", "foods/" + path), 0xFFFFFF, 0,
+        Identifier id = Identifier.fromNamespaceAndPath("innutrient", path);
+        return new NutrientGroup(id, "test", Identifier.parse("minecraft:apple"),
+            Identifier.fromNamespaceAndPath("innutrient", "foods/" + path), 0xFFFFFF, 0,
             50, 40, 80, 20, 90, 1, 1, true, false, true);
     }
 }

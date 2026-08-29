@@ -1,6 +1,6 @@
 package master.innutrient.nutrition;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,8 +22,8 @@ class NutrientGroupTest {
     }
 
     private static NutrientGroup group(boolean low, boolean high, double min, double max) {
-        return new NutrientGroup(ResourceLocation.parse("innutrient:test"), "test",
-            ResourceLocation.parse("minecraft:apple"), ResourceLocation.parse("innutrient:foods/test"),
+        return new NutrientGroup(Identifier.parse("innutrient:test"), "test",
+            Identifier.parse("minecraft:apple"), Identifier.parse("innutrient:foods/test"),
             0xFFFFFF, 0, 50, min, max, Math.min(20, min), Math.max(90, max),
             1, 1, low, high, true);
     }

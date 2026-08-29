@@ -1,7 +1,7 @@
 package master.innutrient.nutrition.resolver;
 
 import master.innutrient.api.NutritionRecipeResolver;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeHolder;
 
@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 public final class NutritionRecipeResolvers {
-    private static final Map<ResourceLocation, NutritionRecipeResolver> RESOLVERS = new LinkedHashMap<>();
+    private static final Map<Identifier, NutritionRecipeResolver> RESOLVERS = new LinkedHashMap<>();
 
     static {
         register(new GenericResolver());
@@ -33,13 +33,15 @@ public final class NutritionRecipeResolvers {
     }
 
     private static final class GenericResolver implements NutritionRecipeResolver {
-        private static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath("innutrient", "generic");
+        private static final Identifier ID = Identifier.fromNamespaceAndPath("innutrient", "generic");
 
-        @Override public ResourceLocation id() { return ID; }
+        @Override public Identifier id() { return ID; }
         @Override public int priority() { return Integer.MIN_VALUE; }
-        @Override public boolean supports(RecipeHolder<?> recipe) { return !recipe.value().getIngredients().isEmpty(); }
+        @Override public boolean supports(RecipeHolder<?> recipe) {
+            return !recipe.value().placementInfo().ingredients().isEmpty();
+        }
         @Override public List<Ingredient> ingredients(RecipeHolder<?> recipe) {
-            return List.copyOf(recipe.value().getIngredients());
+            return List.copyOf(recipe.value().placementInfo().ingredients());
         }
     }
 }

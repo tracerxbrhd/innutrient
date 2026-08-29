@@ -11,7 +11,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
-import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.commands.arguments.IdentifierArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.commands.ReloadCommand;
 import net.minecraft.server.level.ServerPlayer;
@@ -38,21 +38,21 @@ public final class InnutrientCommands {
             .then(Commands.literal("show")
                 .executes(context -> show(context.getSource(), context.getSource().getPlayerOrException()))
                 .then(Commands.argument("player", EntityArgument.player())
-                    .requires(source -> source.hasPermission(2))
+                    .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                     .executes(context -> show(context.getSource(), EntityArgument.getPlayer(context, "player")))))
-            .then(Commands.literal("set").requires(source -> source.hasPermission(2))
+            .then(Commands.literal("set").requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .then(Commands.argument("player", EntityArgument.player())
                     .then(groupArgument().then(Commands.argument("value", DoubleArgumentType.doubleArg(0, 100))
                         .executes(context -> change(context.getSource(), EntityArgument.getPlayer(context, "player"),
-                            ResourceLocationArgument.getId(context, "group"),
+                            IdentifierArgument.getId(context, "group"),
                             DoubleArgumentType.getDouble(context, "value"), false))))))
-            .then(Commands.literal("add").requires(source -> source.hasPermission(2))
+            .then(Commands.literal("add").requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .then(Commands.argument("player", EntityArgument.player())
                     .then(groupArgument().then(Commands.argument("value", DoubleArgumentType.doubleArg(-100, 100))
                         .executes(context -> change(context.getSource(), EntityArgument.getPlayer(context, "player"),
-                            ResourceLocationArgument.getId(context, "group"),
+                            IdentifierArgument.getId(context, "group"),
                             DoubleArgumentType.getDouble(context, "value"), true))))))
-            .then(Commands.literal("reset").requires(source -> source.hasPermission(2))
+            .then(Commands.literal("reset").requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .then(Commands.argument("player", EntityArgument.player()).executes(context -> {
                     ServerPlayer player = EntityArgument.getPlayer(context, "player");
                     NutritionService.reset(player);
@@ -60,9 +60,9 @@ public final class InnutrientCommands {
                         "command.innutrient.reset", player.getDisplayName()), true);
                     return 1;
                 })))
-            .then(Commands.literal("inspect").requires(source -> source.hasPermission(2))
+            .then(Commands.literal("inspect").requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .executes(context -> inspect(context.getSource())))
-            .then(Commands.literal("reload").requires(source -> source.hasPermission(2))
+            .then(Commands.literal("reload").requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .executes(context -> {
                     var server = context.getSource().getServer();
                     context.getSource().sendSuccess(() -> Component.translatable("commands.reload.success"), true);
@@ -71,9 +71,9 @@ public final class InnutrientCommands {
                 }));
     }
 
-    private static com.mojang.brigadier.builder.RequiredArgumentBuilder<CommandSourceStack, net.minecraft.resources.ResourceLocation>
+    private static com.mojang.brigadier.builder.RequiredArgumentBuilder<CommandSourceStack, net.minecraft.resources.Identifier>
     groupArgument() {
-        return Commands.argument("group", ResourceLocationArgument.id()).suggests((context, builder) ->
+        return Commands.argument("group", IdentifierArgument.id()).suggests((context, builder) ->
             SharedSuggestionProvider.suggest(
                 NutritionRegistry.groups().stream().map(value -> value.id().toString()), builder));
     }
@@ -92,7 +92,7 @@ public final class InnutrientCommands {
     }
 
     private static int change(CommandSourceStack source, ServerPlayer player,
-                              net.minecraft.resources.ResourceLocation group, double value, boolean add) {
+                              net.minecraft.resources.Identifier group, double value, boolean add) {
         boolean changed = add ? NutritionService.add(player, group, value) : NutritionService.set(player, group, value);
         if (!changed) {
             source.sendFailure(Component.translatable("command.innutrient.unknown_group", group));
