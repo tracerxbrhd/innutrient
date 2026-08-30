@@ -1,1 +1,8 @@
-{"replace":false,"values":["minecraft:apple","minecraft:golden_apple","minecraft:enchanted_golden_apple","minecraft:melon_slice","minecraft:sweet_berries","minecraft:glow_berries","minecraft:chorus_fruit"]}
+{
+  "replace": false,
+  "values": [
+    "#c:foods/fruit",
+    "#c:foods/berry",
+    "minecraft:chorus_fruit"
+  ]
+}

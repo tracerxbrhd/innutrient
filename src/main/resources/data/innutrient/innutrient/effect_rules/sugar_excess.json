@@ -4,15 +4,13 @@
     "type": "maintained_for",
     "ticks": 1200,
     "condition": {
-      "type": "any",
-      "conditions": [
-        { "type": "count_status", "status": "deficient", "count": 2 },
-        { "type": "balance_below", "value": 30 }
-      ]
+      "type": "group_status",
+      "group": "innutrient:sugars",
+      "status": "excessive"
     }
   },
   "effect": {
-    "id": "minecraft:weakness",
+    "id": "minecraft:hunger",
     "duration_ticks": 260,
     "amplifier": 0,
     "ambient": true,

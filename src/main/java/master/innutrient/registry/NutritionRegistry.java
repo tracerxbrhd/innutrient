@@ -8,6 +8,8 @@ import master.innutrient.Innutrient;
 import master.innutrient.nutrition.NutrientGroup;
 import master.innutrient.nutrition.NutritionProfile;
 import master.innutrient.nutrition.NutritionProfileSource;
+import master.innutrient.nutrition.NutrientStatus;
+import master.innutrient.nutrition.NutritionEffectsManager;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.Resource;
@@ -25,7 +27,7 @@ import java.util.Optional;
 
 /** Immutable snapshots loaded from the versioned Innutrient datapack folders. */
 public final class NutritionRegistry {
-    public static final int FORMAT_VERSION = 1;
+    public static final int FORMAT_VERSION = 2;
     private static final String GROUP_ROOT = "innutrient/nutrient_groups";
     private static final String PROFILE_ROOT = "innutrient/food_profiles";
     private static final String EFFECT_ROOT = "innutrient/effect_rules";
@@ -42,6 +44,7 @@ public final class NutritionRegistry {
             .sorted(Comparator.comparingInt(NutrientGroup::order).thenComparing(value -> value.id().toString()))
             .toList();
         snapshot = new Snapshot(ordered, Map.copyOf(groups), profiles, effects);
+        NutritionEffectsManager.clearAll();
         Innutrient.LOGGER.info("Loaded Innutrient datapack definitions: {} groups, {} food rules, {} effect rules in {} ms",
             ordered.size(), profiles.size(), effects.size(), (System.nanoTime() - started) / 1_000_000L);
     }
@@ -197,21 +200,45 @@ public final class NutritionRegistry {
     private static NutritionEffectRule parseEffect(Identifier id, JsonObject root,
                                                      Map<Identifier, NutrientGroup> groups) {
         JsonObject condition = object(root.get("condition"), "condition");
-        NutritionEffectRule.ConditionType type = NutritionEffectRule.ConditionType.valueOf(
-            string(condition, "type", "all_healthy").toUpperCase(Locale.ROOT));
-        Identifier group = condition.has("group")
-            ? Identifier.parse(condition.get("group").getAsString()) : null;
-        if (group != null && !groups.containsKey(group)) throw new IllegalArgumentException("unknown nutrient " + group);
-        if ((type == NutritionEffectRule.ConditionType.GROUP_BELOW
-            || type == NutritionEffectRule.ConditionType.GROUP_ABOVE) && group == null)
-            throw new IllegalArgumentException("condition requires group");
         JsonObject effect = object(root.get("effect"), "effect");
-        return new NutritionEffectRule(id, type, group, number(condition, "threshold", 20),
-            Math.max(1, integer(condition, "count", 1)),
+        return new NutritionEffectRule(id, parseCondition(condition, groups, 0),
             Identifier.parse(string(effect, "id", "minecraft:weakness")),
             Math.max(20, integer(effect, "duration_ticks", 240)),
             Math.max(0, integer(effect, "amplifier", 0)), bool(root, "beneficial", false),
             bool(effect, "ambient", true), bool(effect, "show_particles", false));
+    }
+
+    private static NutritionCondition parseCondition(JsonObject object,
+                                                       Map<Identifier, NutrientGroup> groups, int depth) {
+        if (depth > 16) throw new IllegalArgumentException("effect condition nesting exceeds 16");
+        NutritionCondition.Type type = NutritionCondition.Type.valueOf(
+            string(object, "type", "all_healthy").toUpperCase(Locale.ROOT));
+        Identifier group = object.has("group")
+            ? Identifier.parse(object.get("group").getAsString()) : null;
+        if (group != null && !groups.containsKey(group)) throw new IllegalArgumentException("unknown nutrient " + group);
+        if ((type == NutritionCondition.Type.GROUP_BELOW || type == NutritionCondition.Type.GROUP_ABOVE
+            || type == NutritionCondition.Type.GROUP_STATUS) && group == null)
+            throw new IllegalArgumentException(type.name().toLowerCase(Locale.ROOT) + " requires group");
+
+        NutrientStatus status = null;
+        if (type == NutritionCondition.Type.GROUP_STATUS || type == NutritionCondition.Type.COUNT_STATUS) {
+            if (!object.has("status")) throw new IllegalArgumentException("condition requires status");
+            status = NutrientStatus.valueOf(object.get("status").getAsString().toUpperCase(Locale.ROOT));
+        }
+
+        List<NutritionCondition> children = new ArrayList<>();
+        if (type == NutritionCondition.Type.ALL || type == NutritionCondition.Type.ANY) {
+            JsonArray array = array(object.get("conditions"), "conditions");
+            if (array.isEmpty() || array.size() > 64)
+                throw new IllegalArgumentException("conditions must contain 1..64 entries");
+            for (JsonElement child : array) children.add(parseCondition(object(child, "condition"), groups, depth + 1));
+        } else if (type == NutritionCondition.Type.NOT || type == NutritionCondition.Type.MAINTAINED_FOR) {
+            children.add(parseCondition(object(object.get("condition"), "condition"), groups, depth + 1));
+        }
+
+        double value = object.has("value") ? number(object, "value", 0) : number(object, "threshold", 20);
+        return new NutritionCondition(type, group, value, status,
+            Math.max(1, integer(object, "count", 1)), Math.max(0, integer(object, "ticks", 0)), children);
     }
 
     private static Map<Identifier, Resource> jsonResources(ResourceManager manager, String root) {
@@ -224,8 +251,10 @@ public final class NutritionRegistry {
     }
 
     private static void requireFormat(JsonObject root) {
-        if (!root.has("format_version") || root.get("format_version").getAsInt() != FORMAT_VERSION)
-            throw new IllegalArgumentException("expected format_version=" + FORMAT_VERSION);
+        if (!root.has("format_version")) throw new IllegalArgumentException("format_version is required");
+        int version = root.get("format_version").getAsInt();
+        if (version < 1 || version > FORMAT_VERSION)
+            throw new IllegalArgumentException("supported format_version range is 1.." + FORMAT_VERSION);
     }
 
     private static JsonObject object(JsonElement element, String name) {

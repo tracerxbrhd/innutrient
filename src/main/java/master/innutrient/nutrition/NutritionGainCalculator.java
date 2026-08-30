@@ -13,4 +13,12 @@ public final class NutritionGainCalculator {
         double result = base * InnutrientServerConfig.GLOBAL_GAIN.get();
         return Double.isFinite(result) ? Math.max(0, result) : 0;
     }
+
+    public static double totalGain(FoodProperties food, NutritionProfile profile, double varietyEfficiency,
+                                   DietQuality dietQuality) {
+        double result = totalGain(food) * MealQualityEngine.multiplier(profile)
+            * Math.max(0, Math.min(1, varietyEfficiency))
+            * NutritionConsequences.absorptionMultiplier(dietQuality);
+        return Double.isFinite(result) ? Math.max(0, result) : 0;
+    }
 }

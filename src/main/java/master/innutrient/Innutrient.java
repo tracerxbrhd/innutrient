@@ -11,7 +11,7 @@ import master.innutrient.api.NutritionApi;
 import master.innutrient.command.InnutrientCommands;
 import master.innutrient.config.InnutrientClientConfig;
 import master.innutrient.config.InnutrientServerConfig;
-import master.innutrient.integration.farmersdelight.FarmersDelightIntegration;
+import master.innutrient.integration.FoodModIntegrations;
 import master.innutrient.network.NutritionNetwork;
 import master.innutrient.nutrition.NutritionEvents;
 import master.innutrient.nutrition.resolver.NutritionResolver;
@@ -61,7 +61,7 @@ public final class Innutrient {
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {
-        event.enqueueWork(FarmersDelightIntegration::report);
+        event.enqueueWork(FoodModIntegrations::report);
     }
 
     public static Identifier id(String path) {

@@ -5,11 +5,15 @@ import master.innutrient.api.NutritionRecipeResolver;
 import master.innutrient.config.InnutrientServerConfig;
 import master.innutrient.nutrition.NutritionProfile;
 import master.innutrient.nutrition.NutritionProfileSource;
+import master.innutrient.nutrition.MealQualityEngine;
+import master.innutrient.nutrition.NutritionGainCalculator;
+import master.innutrient.network.NutritionFoodData;
 import master.innutrient.registry.NutritionRegistry;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
@@ -32,6 +36,7 @@ public final class NutritionResolver {
     private final Map<Item, NutritionProfile> cache = new ConcurrentHashMap<>();
     private volatile Map<Item, List<RecipeHolder<?>>> recipesByOutput = Map.of();
     private volatile Map<Identifier, NutritionProfile> edibleSnapshot = Map.of();
+    private volatile Map<Identifier, NutritionFoodData> foodDataSnapshot = Map.of();
     private volatile long lastRebuildMillis;
     private volatile int unresolvedEdibleItems;
 
@@ -67,6 +72,7 @@ public final class NutritionResolver {
         cache.clear();
 
         Map<Identifier, NutritionProfile> edible = new LinkedHashMap<>();
+        Map<Identifier, NutritionFoodData> foodData = new LinkedHashMap<>();
         int unresolved = 0;
         int explicit = 0;
         int direct = 0;
@@ -77,7 +83,13 @@ public final class NutritionResolver {
             NutritionProfile profile = resolve(stack);
             if (!profile.resolved()) unresolved++;
             else {
-                edible.put(BuiltInRegistries.ITEM.getKey(item), profile);
+                Identifier itemId = BuiltInRegistries.ITEM.getKey(item);
+                edible.put(itemId, profile);
+                FoodProperties properties = stack.get(DataComponents.FOOD);
+                double baseGain = NutritionGainCalculator.totalGain(properties);
+                var mealQuality = MealQualityEngine.classify(profile);
+                foodData.put(itemId, new NutritionFoodData(profile, baseGain, mealQuality,
+                    MealQualityEngine.multiplier(profile)));
                 switch (profile.source()) {
                     case EXPLICIT -> explicit++;
                     case DIRECT_TAGS -> direct++;
@@ -87,6 +99,7 @@ public final class NutritionResolver {
             }
         }
         edibleSnapshot = Collections.unmodifiableMap(edible);
+        foodDataSnapshot = Collections.unmodifiableMap(foodData);
         unresolvedEdibleItems = unresolved;
         lastRebuildMillis = (System.nanoTime() - started) / 1_000_000L;
         Innutrient.LOGGER.info("Innutrient nutrition registry rebuilt: {} groups, {} explicit foods, {} directly classified foods, {} recipe-derived foods, {} unresolved edible items; {} ms",
@@ -95,6 +108,10 @@ public final class NutritionResolver {
 
     public Map<Identifier, NutritionProfile> edibleProfiles() {
         return edibleSnapshot;
+    }
+
+    public Map<Identifier, NutritionFoodData> edibleFoodData() {
+        return foodDataSnapshot;
     }
 
     public long lastRebuildMillis() {
@@ -119,28 +136,26 @@ public final class NutritionResolver {
             if (explicit.matched() && explicit.profile().resolved()) return cache(item, explicit.profile());
             if (explicit.matched() && explicit.disableAutomatic()) return cache(item, NutritionProfile.unknown());
 
+            if (InnutrientServerConfig.AUTO_RECIPES.get()) {
+                List<RecipeHolder<?>> candidates = recipesByOutput.getOrDefault(item, List.of());
+                int maximum = Math.min(candidates.size(), InnutrientServerConfig.MAX_RECIPES_PER_OUTPUT.get());
+                List<ResolvedRecipe> resolved = new ArrayList<>();
+                for (int index = 0; index < maximum; index++) {
+                    ResolvedRecipe recipe = resolveRecipe(candidates.get(index), depth, guard);
+                    if (recipe != null && !recipe.values().isEmpty()) resolved.add(recipe);
+                }
+                if (!resolved.isEmpty()) {
+                    int maxDepth = depth;
+                    for (ResolvedRecipe recipe : resolved) maxDepth = Math.max(maxDepth, recipe.depth());
+                    Identifier representative = resolved.getFirst().recipeId();
+                    return cache(item, NutritionProfile.recipe(
+                        NutritionProfile.averageNutrients(resolved.stream().map(ResolvedRecipe::values).toList()),
+                        representative, Math.max(1, maxDepth - depth + 1)));
+                }
+            }
+
             NutritionProfile direct = NutritionRegistry.directTags(stack);
-            if (direct.resolved()) return cache(item, direct);
-            if (!InnutrientServerConfig.AUTO_RECIPES.get()) return cache(item, NutritionProfile.unknown());
-
-            List<RecipeHolder<?>> candidates = recipesByOutput.getOrDefault(item, List.of());
-            if (candidates.isEmpty()) return cache(item, NutritionProfile.unknown());
-            int maximum = Math.min(candidates.size(), InnutrientServerConfig.MAX_RECIPES_PER_OUTPUT.get());
-            List<ResolvedRecipe> resolved = new ArrayList<>();
-            for (int index = 0; index < maximum; index++) {
-                ResolvedRecipe recipe = resolveRecipe(candidates.get(index), depth, guard);
-                if (recipe != null && !recipe.values().isEmpty()) resolved.add(recipe);
-            }
-            if (resolved.isEmpty()) return cache(item, NutritionProfile.unknown());
-
-            int maxDepth = depth;
-            for (ResolvedRecipe recipe : resolved) {
-                maxDepth = Math.max(maxDepth, recipe.depth());
-            }
-            Identifier representative = resolved.getFirst().recipeId();
-            return cache(item, NutritionProfile.recipe(
-                NutritionProfile.averageNutrients(resolved.stream().map(ResolvedRecipe::values).toList()),
-                representative, Math.max(1, maxDepth - depth + 1)));
+            return cache(item, direct.resolved() ? direct : NutritionProfile.unknown());
         } finally {
             guard.exit(item);
         }

@@ -6,6 +6,7 @@ import master.innutrient.nutrition.resolver.NutritionResolver;
 import master.innutrient.player.NutritionAttachments;
 import master.innutrient.player.NutritionState;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.food.FoodProperties;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -29,7 +30,7 @@ public final class NutritionEvents {
         FoodProperties food = event.getItem().get(DataComponents.FOOD);
         if (food == null) return;
         NutritionProfile profile = NutritionResolver.INSTANCE.resolve(event.getItem());
-        NutritionService.consume(player, profile, food);
+        NutritionService.consume(player, BuiltInRegistries.ITEM.getKey(event.getItem().getItem()), profile, food);
     }
 
     @SubscribeEvent
@@ -46,6 +47,7 @@ public final class NutritionEvents {
             && player.tickCount > 0 && player.tickCount % InnutrientServerConfig.PERIODIC_INTERVAL.get() == 0) {
             NutritionService.decay(player, InnutrientServerConfig.PERIODIC_AMOUNT.get());
         }
+        if (player.tickCount % 20 == 0) NutritionService.tickDietQuality(player);
         if (player.tickCount % 200 == 0)
             NutritionEffectsManager.evaluate(player, NutritionService.get(player));
     }
@@ -90,6 +92,7 @@ public final class NutritionEvents {
     @SubscribeEvent
     public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         LAST_HUNGER.remove(event.getEntity().getUUID());
+        if (event.getEntity() instanceof ServerPlayer player) NutritionEffectsManager.clear(player);
     }
 
     @SubscribeEvent

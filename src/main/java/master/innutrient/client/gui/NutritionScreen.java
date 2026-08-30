@@ -11,6 +11,7 @@ import master.innutrient.Innutrient;
 import master.innutrient.client.ClientNutritionCatalog;
 import master.innutrient.network.NutritionRequestPayload;
 import master.innutrient.nutrition.NutritionService;
+import master.innutrient.nutrition.NutrientStatus;
 import master.innutrient.player.NutritionAttachments;
 import master.innutrient.player.NutritionState;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -32,6 +33,8 @@ public final class NutritionScreen extends UIScreen implements UApiTabHost {
     private UIPanel panel;
     private UILabel titleLabel;
     private UILabel balanceLabel;
+    private UILabel qualityLabel;
+    private UILabel contextLabel;
     private UIScrollContainer scroll;
 
     public NutritionScreen() {
@@ -50,6 +53,8 @@ public final class NutritionScreen extends UIScreen implements UApiTabHost {
         titleLabel = panel.add(new UILabel(Component.translatable("screen.innutrient.title"), ColorToken.TEXT_PRIMARY));
         titleLabel.setShadow(true);
         balanceLabel = panel.add(new UILabel(Component.empty(), ColorToken.ACCENT_SUCCESS));
+        qualityLabel = panel.add(new UILabel(Component.empty(), ColorToken.TEXT_PRIMARY));
+        contextLabel = panel.add(new UILabel(Component.empty(), ColorToken.TEXT_MUTED));
         scroll = panel.add(new UIScrollContainer());
         scroll.setWheelStep(ROW_HEIGHT + ROW_GAP);
         for (var group : ClientNutritionCatalog.groups()) rows.add(scroll.add(new NutrientRow(group)));
@@ -64,7 +69,9 @@ public final class NutritionScreen extends UIScreen implements UApiTabHost {
         panel.setBounds(left, top, panelWidth, panelHeight);
         titleLabel.setBounds(left + 12, top + 12, panelWidth - 24, 12);
         balanceLabel.setBounds(left + 12, top + 30, panelWidth - 24, 12);
-        scroll.setBounds(left + 10, top + 50, panelWidth - 20, panelHeight - 60);
+        qualityLabel.setBounds(left + 12, top + 46, panelWidth - 24, 12);
+        contextLabel.setBounds(left + 12, top + 62, panelWidth - 24, 12);
+        scroll.setBounds(left + 10, top + 82, panelWidth - 20, panelHeight - 92);
         int contentHeight = rows.isEmpty() ? 24 : rows.size() * (ROW_HEIGHT + ROW_GAP) - ROW_GAP;
         scroll.setContentHeight(contentHeight);
         int rowY = scroll.bounds().y() - scroll.scrollOffset();
@@ -93,6 +100,19 @@ public final class NutritionScreen extends UIScreen implements UApiTabHost {
         balanceLabel.setText(Component.translatable("screen.innutrient.balance",
             String.format(Locale.ROOT, "%.0f%%",
                 NutritionService.balanceScore(state, ClientNutritionCatalog.groups()))));
+        qualityLabel.setText(Component.translatable("screen.innutrient.diet_quality",
+            Component.translatable(state.dietQuality().translationKey())));
+        var low = ClientNutritionCatalog.groups().stream()
+            .filter(group -> group.penalizeLow() && (group.status(state.get(group)) == NutrientStatus.DEFICIENT
+                || group.status(state.get(group)) == NutrientStatus.BELOW_TARGET)).findFirst();
+        var high = ClientNutritionCatalog.groups().stream()
+            .filter(group -> group.penalizeHigh() && group.status(state.get(group)) == NutrientStatus.EXCESSIVE)
+            .findFirst();
+        contextLabel.setText(low.map(group -> Component.translatable("screen.innutrient.context.low",
+                Component.translatable(group.translationKey())))
+            .orElseGet(() -> high.map(group -> Component.translatable("screen.innutrient.context.high",
+                    Component.translatable(group.translationKey())))
+                .orElseGet(() -> Component.translatable("screen.innutrient.context.ok"))));
     }
 
     @Override

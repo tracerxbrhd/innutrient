@@ -31,3 +31,5 @@ type = "required"
 versionRange = "${u_api_version_range}"
 ordering = "AFTER"
 side = "BOTH"
+[[mixins]]
+config = "innutrient.mixins.json"

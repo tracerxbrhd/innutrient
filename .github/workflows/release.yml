@@ -45,11 +45,14 @@ jobs:
 
           u_api_version="$(read_property u_api_version)"
           minecraft_version="$(read_property minecraft_version)"
+          java_version="$(read_property java_version)"
           repository="${U_API_REPOSITORY:-${GITHUB_REPOSITORY_OWNER}/u-api}"
           ref="${U_API_REF:-v${u_api_version}+mc${minecraft_version}}"
 
           echo "repository=${repository}" >> "${GITHUB_OUTPUT}"
           echo "ref=${ref}" >> "${GITHUB_OUTPUT}"
+          echo "u_api_version=${u_api_version}" >> "${GITHUB_OUTPUT}"
+          echo "java_version=${java_version}" >> "${GITHUB_OUTPUT}"
           echo "Using U-API source: ${repository}@${ref}"
 
       - name: Checkout U-API dependency
@@ -60,11 +63,11 @@ jobs:
           path: u-api
           token: ${{ secrets.U_API_REPOSITORY_TOKEN || secrets.GITHUB_TOKEN }}
 
-      - name: Set up Java 25
+      - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 25
+          java-version: ${{ steps.uapi_checkout.outputs.java_version }}
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -212,6 +215,8 @@ jobs:
         env:
           MOD_VERSION: ${{ steps.meta.outputs.mod_version }}
           MINECRAFT_VERSION: ${{ steps.meta.outputs.minecraft_version }}
+          JAVA_VERSION: ${{ steps.uapi_checkout.outputs.java_version }}
+          U_API_VERSION: ${{ steps.uapi_checkout.outputs.u_api_version }}
           TAG_NAME: ${{ github.ref_name }}
         run: |
           set -euo pipefail
@@ -223,6 +228,8 @@ jobs:
 
           mod_version = os.environ["MOD_VERSION"]
           minecraft_version = os.environ["MINECRAFT_VERSION"]
+          java_version = os.environ["JAVA_VERSION"]
+          u_api_version = os.environ["U_API_VERSION"]
           tag_name = os.environ["TAG_NAME"]
           root = pathlib.Path(".")
 
@@ -260,8 +267,9 @@ jobs:
               "\n\n## Compatibility\n\n"
               f"- Minecraft: {minecraft_version}\n"
               "- Loader: NeoForge\n"
-              "- Java: 25\n"
-              "- Requires: U-API 3.0.0-beta.5 or newer in the 3.x line\n"
+              f"- Java: {java_version}\n"
+              f"- Requires: U-API {u_api_version}\n"
+              "- Food mods: optional, data-driven compatibility\n"
           )
           pathlib.Path("release_notes.md").write_text(notes.rstrip() + compatibility, encoding="utf-8")
           PY
@@ -282,7 +290,7 @@ jobs:
           changelog-file: release_notes.md
           loaders: neoforge
           game-versions: ${{ steps.meta.outputs.minecraft_version }}
-          java: 25
+          java: ${{ steps.uapi_checkout.outputs.java_version }}
 
       - name: Publish to CurseForge
         if: env.HAS_CURSEFORGE == 'true'
@@ -300,7 +308,7 @@ jobs:
           changelog-file: release_notes.md
           loaders: neoforge
           game-versions: ${{ steps.meta.outputs.minecraft_version }}
-          java: 25
+          java: ${{ steps.uapi_checkout.outputs.java_version }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

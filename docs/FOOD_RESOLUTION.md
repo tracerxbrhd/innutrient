@@ -1,25 +1,18 @@
 # Food resolution
 
-Innutrient resolves each item with this precedence:
+Every edible item is resolved in this order:
 
 ```text
-matching explicit food rules
-→ configured nutrient-group item tags
-→ recipe-derived composition
-→ unresolved
+explicit food profile / datapack override
+→ specialized or generic recipe inheritance
+→ configured nutrient item tags (including Common Tags)
+→ unclassified
 ```
 
-Results are cached by Item. A datapack reload rebuilds the output-to-recipe index and invalidates the cache; eating and tooltips do not walk recipe graphs during normal play.
+Explicit rules always win. Recipe inheritance precedes tags so a meal keeps multi-group composition instead of collapsing to one output tag.
 
-## Recipe algorithm
+On reload, recipes are indexed by displayed output and sorted by ID. The highest-priority resolver exposes placement ingredients; alternatives are sorted, bounded, recursively resolved, and averaged. Multiple producing recipes are averaged within the configured cap. A visited-item guard and depth bound stop cycles.
 
-1. Recipes are indexed and sorted by recipe ID.
-2. Recipe outputs are indexed through `Recipe#display()`, and the first registered `NutritionRecipeResolver` supporting a recipe exposes its ingredients. The built-in lowest-priority adapter accepts any recipe with non-empty `Recipe#placementInfo()` ingredients.
-3. Ingredient alternatives are sorted by item ID, capped by `maxIngredientAlternatives`, recursively resolved, and averaged. Unresolved alternatives do not invent nutrition.
-4. Resolved ingredient profiles are summed and normalized for that recipe.
-5. If several capped recipes produce the same item, their resolved compositions are averaged in recipe-ID order.
-6. A visited-item set stops cycles, and `maxDepth` stops pathological chains.
+Profiles, Meal Quality, and baseline tooltip gain are cached by item. Eating and tooltips never traverse recipe graphs. Reload atomically invalidates and rebuilds caches, reconciles players, and resynchronizes clients.
 
-Output stack count does not alter composition percentages; it affects neither the normalized profile nor the food's vanilla hunger/saturation value used for total gain.
-
-The derived balance score is the geometric mean of each required group's closeness to its configured healthy range. This prevents high groups from hiding one severe deficiency. Groups can independently opt out of low or high penalties, so sugar-like asymmetric ranges work naturally.
+Both supported branches use verified NeoForge `c:foods/*` tags plus `c:eggs` and crop tags. The 1.21.1 branch additionally carries optional legacy aliases for food ecosystems that actually exist there; the 26.2 branch does not claim unavailable mod integrations.
