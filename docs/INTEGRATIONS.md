@@ -1,17 +1,15 @@
 # Integrations
 
-## Farmer's Delight
+Innutrient has no required runtime dependency on food mods, JEI, or EMI. Integrations are data-driven first:
 
-Farmer's Delight is optional and never loaded as a Java dependency.
+1. official NeoForge Common Tags;
+2. recipes exposed through the standard recipe contract;
+3. optional tag aliases for established ecosystems;
+4. explicit datapack profiles for exceptions;
+5. a specialized `NutritionRecipeResolver` only when a recipe hides its ingredients.
 
-Current native support consists of:
+Farmer's Delight Cooking Pot/Cutting Board and Farm & Charm Cooking Pot, Crafting Bowl, Mincer, Roaster, Silo, and Stove recipe implementations on 1.21.1 expose standard ingredients, so they use the safe generic resolver. Pam's HarvestCraft 2 primarily uses normal crafting/smelting plus legacy common tags. Create: Food processing recipes are handled when their Create recipe implementation exposes ingredients; exceptions can be corrected with a compatibility datapack.
 
-- curated optional tag entries for cabbage, tomato, onion, rice, dough, pasta, eggs, meat cuts, bacon, fish slices, ham, and mutton chops;
-- automatic analysis of Cooking Pot and Cutting Board recipes when they expose ordinary `Recipe#getIngredients()` data;
-- recursive inheritance into meals assembled from those ingredients.
+Normal Innutrient item tooltips also appear inside JEI and EMI item views without linking against either API. A custom recipe category is intentionally not added because it would duplicate the synchronized tooltip data and create version-specific hard dependencies.
 
-This matches the Farmer's Delight 1.21 branch recipe format, where Cooking Pot recipes expose an ingredient array. Cutting recipes that expose only a primary result are resolved for that primary result; unusual extra outputs need a custom resolver or datapack override.
-
-## Adding another recipe system
-
-Implement `master.innutrient.api.NutritionRecipeResolver` and register it through `NutritionApi.registerRecipeResolver` during mod setup. Give a specialized resolver higher priority than the generic adapter. Optional integration code must remain behind the other mod's presence check and must not reference absent classes from always-loaded code.
+See [COMPATIBILITY.md](COMPATIBILITY.md) for the version matrix and [API.md](API.md) for custom resolver registration.

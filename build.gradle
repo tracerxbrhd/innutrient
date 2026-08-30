@@ -16,7 +16,7 @@ base {
     archivesName = mod_id
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+java.toolchain.languageVersion = JavaLanguageVersion.of(java_version as int)
 
 neoForge {
     version = project.neo_version
@@ -66,7 +66,7 @@ dependencies {
 
     testImplementation platform('org.junit:junit-bom:5.11.4')
     testImplementation 'org.junit.jupiter:junit-jupiter'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.junit.platform:junit-platform-launcher'
 }
 
 var generateModMetadata = tasks.register('generateModMetadata', ProcessResources) {
@@ -110,6 +110,13 @@ idea.module {
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+// Useful on restricted hosts where Gradle's test-worker loopback transport is unavailable.
+tasks.register('testSingleProcess', JavaExec) {
+    dependsOn tasks.named('testClasses')
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'master.innutrient.test.SingleProcessTestLauncher'
 }
 
 sourceSets.test.compileClasspath += sourceSets.main.compileClasspath

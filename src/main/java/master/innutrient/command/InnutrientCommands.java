@@ -5,6 +5,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import dev.uapi.command.UApiCommandRegistry;
 import master.innutrient.nutrition.NutrientGroup;
 import master.innutrient.nutrition.NutritionService;
+import master.innutrient.nutrition.MealQualityEngine;
 import master.innutrient.nutrition.resolver.NutritionResolver;
 import master.innutrient.registry.NutritionRegistry;
 import net.minecraft.commands.CommandSourceStack;
@@ -88,6 +89,8 @@ public final class InnutrientCommands {
         }
         String balance = String.format(Locale.ROOT, "%.1f%%", NutritionService.balanceScore(state));
         source.sendSuccess(() -> Component.translatable("command.innutrient.show.balance", balance), false);
+        source.sendSuccess(() -> Component.translatable("command.innutrient.show.quality",
+            Component.translatable(state.dietQuality().translationKey())), false);
         return NutritionRegistry.groups().size();
     }
 
@@ -123,6 +126,10 @@ public final class InnutrientCommands {
         if (profile.recipeId() != null)
             source.sendSuccess(() -> Component.translatable("command.innutrient.inspect.recipe",
                 profile.recipeId(), profile.resolutionDepth()), false);
+        var meal = MealQualityEngine.classify(profile);
+        source.sendSuccess(() -> Component.translatable("command.innutrient.inspect.meal",
+            Component.translatable(meal.translationKey()),
+            String.format(Locale.ROOT, "%.0f%%", (MealQualityEngine.multiplier(profile) - 1.0) * 100)), false);
         return profile.nutrients().size();
     }
 }

@@ -1,10 +1,11 @@
 {
   "replace": false,
   "values": [
-    "minecraft:carrot","minecraft:golden_carrot","minecraft:potato","minecraft:baked_potato",
-    "minecraft:poisonous_potato","minecraft:beetroot","minecraft:pumpkin","minecraft:brown_mushroom",
-    "minecraft:red_mushroom","minecraft:dried_kelp","minecraft:suspicious_stew",
-    {"id":"farmersdelight:cabbage","required":false},{"id":"farmersdelight:cabbage_leaf","required":false},
-    {"id":"farmersdelight:tomato","required":false},{"id":"farmersdelight:onion","required":false}
+    "#c:foods/vegetable",
+    { "id": "#c:vegetables", "required": false },
+    "minecraft:pumpkin",
+    "minecraft:brown_mushroom",
+    "minecraft:red_mushroom",
+    "minecraft:dried_kelp"
   ]
 }

@@ -2,6 +2,7 @@ package master.innutrient.nutrition;
 
 import master.innutrient.player.NutritionAttachments;
 import master.innutrient.player.NutritionState;
+import master.innutrient.config.InnutrientServerConfig;
 import master.innutrient.registry.NutritionRegistry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -44,14 +45,33 @@ public final class NutritionService {
     }
 
     public static double consume(ServerPlayer player, NutritionProfile profile, FoodProperties food) {
+        return consume(player, null, profile, food);
+    }
+
+    public static double consume(ServerPlayer player, ResourceLocation foodId, NutritionProfile profile,
+                                 FoodProperties food) {
         if (!profile.resolved()) return 0;
-        double totalGain = NutritionGainCalculator.totalGain(food);
+        NutritionState current = get(player);
+        double varietyEfficiency = 1.0;
+        FoodVariety.Result variety = null;
+        if (InnutrientServerConfig.VARIETY_ENABLED.get() && foodId != null) {
+            variety = FoodVariety.consume(current.lastFood(), current.repeatCount(), current.lastFoodGameTime(),
+                foodId, player.level().getGameTime(), InnutrientServerConfig.VARIETY_REPEAT_PENALTY.get(),
+                InnutrientServerConfig.VARIETY_MINIMUM_EFFICIENCY.get(),
+                InnutrientServerConfig.VARIETY_RECOVERY_TICKS.get());
+            varietyEfficiency = variety.efficiency();
+        }
+        double totalGain = NutritionGainCalculator.totalGain(food, profile, varietyEfficiency,
+            current.dietQuality());
         if (totalGain <= 0) return 0;
-        NutritionState changed = get(player);
+        NutritionState changed = current;
         for (NutrientGroup group : NutritionRegistry.groups()) {
             double weight = profile.nutrients().getOrDefault(group.id(), 0.0);
             if (weight > 0) changed = changed.add(group, totalGain * weight * group.gainMultiplier());
         }
+        if (variety != null)
+            changed = changed.withFoodStreak(variety.food(), variety.repeatCount(), variety.gameTime());
+        changed = updateDietQuality(changed, player.level().getGameTime());
         update(player, changed, true);
         return totalGain;
     }
@@ -91,6 +111,20 @@ public final class NutritionService {
 
     public static double balanceScore(ServerPlayer player) {
         return balanceScore(get(player));
+    }
+
+    public static DietQuality dietQuality(ServerPlayer player) {
+        return get(player).dietQuality();
+    }
+
+    public static void tickDietQuality(ServerPlayer player) {
+        NutritionState current = get(player);
+        NutritionState changed = updateDietQuality(current, player.level().getGameTime());
+        if (!changed.equals(current)) update(player, changed, false);
+    }
+
+    private static NutritionState updateDietQuality(NutritionState state, long gameTime) {
+        return DietQualityEngine.update(state, NutritionRegistry.groups(), balanceScore(state), gameTime);
     }
 
     private static void update(ServerPlayer player, NutritionState state, boolean evaluateEffects) {

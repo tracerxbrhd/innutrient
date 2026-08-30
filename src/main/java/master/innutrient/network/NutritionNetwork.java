@@ -10,7 +10,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 
 public final class NutritionNetwork {
-    public static final String PROTOCOL_VERSION = "1";
+    public static final String PROTOCOL_VERSION = "2";
     private NutritionNetwork() {}
 
     public static void register(RegisterPayloadHandlersEvent event) {
@@ -30,6 +30,6 @@ public final class NutritionNetwork {
 
     public static void syncCatalog(ServerPlayer player) {
         PacketDistributor.sendToPlayer(player,
-            new NutritionCatalogPayload(NutritionRegistry.groups(), NutritionResolver.INSTANCE.edibleProfiles()));
+            new NutritionCatalogPayload(NutritionRegistry.groups(), NutritionResolver.INSTANCE.edibleFoodData()));
     }
 }

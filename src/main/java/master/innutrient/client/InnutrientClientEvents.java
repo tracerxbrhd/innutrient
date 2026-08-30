@@ -49,19 +49,36 @@ public final class InnutrientClientEvents {
         @SubscribeEvent
         public static void tooltip(ItemTooltipEvent event) {
             if (!InnutrientClientConfig.SHOW_TOOLTIPS.get()) return;
-            var profile = ClientNutritionCatalog.profile(event.getItemStack());
+            var food = ClientNutritionCatalog.food(event.getItemStack());
+            var profile = food.profile();
             if (!profile.resolved()) return;
             event.getToolTip().add(Component.translatable("tooltip.innutrient.header"));
             profile.nutrients().forEach((id, weight) -> ClientNutritionCatalog.groups().stream()
                 .filter(group -> group.id().equals(id)).findFirst().ifPresent(group -> event.getToolTip().add(
                     Component.translatable("tooltip.innutrient.entry", Component.translatable(group.translationKey()),
-                        String.format(Locale.ROOT, "%.0f%%", weight * 100)))));
+                        String.format(Locale.ROOT, "+%.1f", food.baseGain() * food.mealMultiplier()
+                            * weight * group.gainMultiplier())))));
+            if (food.mealQuality().minimumGroups() >= 2) {
+                event.getToolTip().add(Component.empty());
+                event.getToolTip().add(Component.translatable(food.mealQuality().translationKey()));
+                event.getToolTip().add(Component.translatable("tooltip.innutrient.efficiency",
+                    String.format(Locale.ROOT, "+%.0f%%", (food.mealMultiplier() - 1.0) * 100)));
+            }
             boolean advanced = !InnutrientClientConfig.ADVANCED_ON_SHIFT.get() || Screen.hasShiftDown();
-            if (advanced && profile.source() == NutritionProfileSource.RECIPE_DERIVED)
-                event.getToolTip().add(Component.translatable("tooltip.innutrient.recipe_derived",
-                    profile.resolutionDepth()));
-            else if (!advanced && InnutrientClientConfig.ADVANCED_ON_SHIFT.get())
+            if (advanced) {
+                String sourceKey = switch (profile.source()) {
+                    case EXPLICIT -> "tooltip.innutrient.source.explicit";
+                    case DIRECT_TAGS -> "tooltip.innutrient.source.tags";
+                    case RECIPE_DERIVED -> "tooltip.innutrient.source.recipe";
+                    case UNKNOWN -> "tooltip.innutrient.source.unknown";
+                };
+                event.getToolTip().add(Component.translatable(sourceKey));
+                if (profile.source() == NutritionProfileSource.RECIPE_DERIVED)
+                    event.getToolTip().add(Component.translatable("tooltip.innutrient.recipe_depth",
+                        profile.resolutionDepth()));
+            } else if (InnutrientClientConfig.ADVANCED_ON_SHIFT.get()) {
                 event.getToolTip().add(Component.translatable("tooltip.innutrient.shift"));
+            }
         }
     }
 }

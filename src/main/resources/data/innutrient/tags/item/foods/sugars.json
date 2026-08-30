@@ -1,1 +1,11 @@
-{"replace":false,"values":["minecraft:sugar","minecraft:honey_bottle","minecraft:cookie","minecraft:pumpkin_pie","minecraft:cocoa_beans"]}
+{
+  "replace": false,
+  "values": [
+    "#c:foods/candy",
+    "#c:foods/cookie",
+    "#c:foods/pie",
+    "minecraft:sugar",
+    "minecraft:honey_bottle",
+    "minecraft:cocoa_beans"
+  ]
+}

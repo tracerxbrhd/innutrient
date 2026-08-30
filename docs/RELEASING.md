@@ -1,59 +1,36 @@
 # Releasing Innutrient
 
-Publishing is tag-driven. Normal branch pushes do not publish artifacts.
+Publishing remains tag-driven. Normal pushes never publish.
 
-## GitHub configuration
+## Version branches
 
-Required repository secrets:
+| Branch | Minecraft | Java | U-API line | Stable tag |
+|---|---:|---:|---:|---|
+| `master` | 1.21.1 | 21 | 2.x | `v1.0.0+mc1.21.1` |
+| `port/26.2` | 26.2 | 25 | 3.x | `v1.0.0+mc26.2` |
 
-- `MODRINTH_TOKEN` — Modrinth API token.
-- `CURSEFORGE_TOKEN` — CurseForge API token, only when CurseForge publishing is desired.
+Minecraft 26.2 requires the newer Java toolchain; the 1.21.1 branch remains Java 21. Each tag must point to the matching branch commit.
 
-Required repository variables:
+## Repository configuration
 
-- `MODRINTH_PROJECT_ID` — Innutrient project ID or slug on Modrinth.
-- `U_API_MODRINTH_PROJECT_ID` — U-API project ID or slug on Modrinth.
-- `CURSEFORGE_PROJECT_ID` — optional Innutrient project ID on CurseForge.
-- `U_API_CURSEFORGE_PROJECT_ID` — required when CurseForge publishing is configured.
-- `U_API_REPOSITORY` — optional GitHub source repository, defaulting to `<owner>/u-api`.
-- `U_API_REF` — optional U-API branch, tag, or commit, defaulting to `v<u_api_version>+mc<minecraft_version>`.
+Required secrets: `MODRINTH_TOKEN`; and `CURSEFORGE_TOKEN` when CurseForge is enabled.
 
-If U-API is private, `U_API_REPOSITORY_TOKEN` must grant read access. Project IDs belong in variables; API tokens belong in secrets.
+Required variables: `MODRINTH_PROJECT_ID`, `U_API_MODRINTH_PROJECT_ID`; plus `CURSEFORGE_PROJECT_ID` and `U_API_CURSEFORGE_PROJECT_ID` for CurseForge. `U_API_REPOSITORY` and `U_API_REF` may override the default matching U-API source. A private U-API repository also needs `U_API_REPOSITORY_TOKEN`.
 
-## Local verification
+The workflow reads Minecraft, Java, mod version, and U-API version from `gradle.properties`, validates the tag, runs `clean build`, selects exactly one release JAR, and publishes identical metadata to Modrinth, CurseForge (when configured), and GitHub Releases.
 
-From the repository root, after committing and pushing `master`:
+## Safe local flow
+
+Commit and push the intended branch, then run:
 
 ```powershell
 .\scripts\release.ps1 -DryRun
 ```
 
-This verifies the clean and synchronized repository, version metadata, absent tag, and a complete clean Gradle build without creating a tag.
-
-## Publishing
-
-Stable release:
+Only after the dry run and gameplay checks succeed:
 
 ```powershell
 .\scripts\release.ps1
 ```
 
-Pre-release channels:
-
-```powershell
-.\scripts\release.ps1 -Channel beta
-.\scripts\release.ps1 -Channel alpha
-```
-
-The script creates and pushes an annotated tag only after all checks pass. For version `0.1.0` and Minecraft `1.21.1`, the stable tag is `v0.1.0+mc1.21.1`.
-
-GitHub Actions then:
-
-1. checks out the tagged Innutrient source and the matching U-API tag;
-2. validates metadata and publishing configuration;
-3. builds and selects exactly one user-facing JAR;
-4. publishes to Modrinth with U-API marked as required;
-5. publishes to CurseForge when both CurseForge settings are present;
-6. creates the GitHub Release with the same JAR and generated notes.
-
-Do not move or reuse an already published tag. Fix the problem, increment `mod_version`, commit, and publish a new tag.
+The script refuses dirty, detached, unsynchronized, or already-tagged states and creates the annotated tag only after a clean build. Never move a published tag; increment the mod version and publish a new tag instead.

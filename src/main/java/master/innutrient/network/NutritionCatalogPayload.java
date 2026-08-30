@@ -4,6 +4,7 @@ import master.innutrient.Innutrient;
 import master.innutrient.nutrition.NutrientGroup;
 import master.innutrient.nutrition.NutritionProfile;
 import master.innutrient.nutrition.NutritionProfileSource;
+import master.innutrient.nutrition.MealQuality;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
@@ -15,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 public record NutritionCatalogPayload(List<NutrientGroup> groups,
-                                      Map<ResourceLocation, NutritionProfile> profiles)
+                                      Map<ResourceLocation, NutritionFoodData> foods)
     implements CustomPacketPayload {
     public static final Type<NutritionCatalogPayload> TYPE = new Type<>(Innutrient.id("catalog"));
     public static final StreamCodec<RegistryFriendlyByteBuf, NutritionCatalogPayload> STREAM_CODEC = new StreamCodec<>() {
@@ -25,22 +26,30 @@ public record NutritionCatalogPayload(List<NutrientGroup> groups,
             List<NutrientGroup> groups = new ArrayList<>(groupCount);
             for (int index = 0; index < groupCount; index++) groups.add(readGroup(buffer));
             int profileCount = Math.min(65536, Math.max(0, buffer.readVarInt()));
-            Map<ResourceLocation, NutritionProfile> profiles = new LinkedHashMap<>();
+            Map<ResourceLocation, NutritionFoodData> foods = new LinkedHashMap<>();
             for (int index = 0; index < profileCount; index++) {
                 ResourceLocation item = buffer.readResourceLocation();
-                profiles.put(item, readProfile(buffer));
+                NutritionProfile profile = readProfile(buffer);
+                double baseGain = buffer.readDouble();
+                int qualityOrdinal = buffer.readUnsignedByte();
+                MealQuality[] qualities = MealQuality.values();
+                MealQuality quality = qualityOrdinal < qualities.length ? qualities[qualityOrdinal] : MealQuality.BASIC;
+                foods.put(item, new NutritionFoodData(profile, baseGain, quality, buffer.readDouble()));
             }
-            return new NutritionCatalogPayload(List.copyOf(groups), Map.copyOf(profiles));
+            return new NutritionCatalogPayload(List.copyOf(groups), Map.copyOf(foods));
         }
 
         @Override
         public void encode(RegistryFriendlyByteBuf buffer, NutritionCatalogPayload payload) {
             buffer.writeVarInt(payload.groups().size());
             payload.groups().forEach(group -> writeGroup(buffer, group));
-            buffer.writeVarInt(payload.profiles().size());
-            payload.profiles().forEach((item, profile) -> {
+            buffer.writeVarInt(payload.foods().size());
+            payload.foods().forEach((item, food) -> {
                 buffer.writeResourceLocation(item);
-                writeProfile(buffer, profile);
+                writeProfile(buffer, food.profile());
+                buffer.writeDouble(food.baseGain());
+                buffer.writeByte(food.mealQuality().ordinal());
+                buffer.writeDouble(food.mealMultiplier());
             });
         }
     };

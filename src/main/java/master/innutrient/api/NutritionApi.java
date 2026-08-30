@@ -3,6 +3,8 @@ package master.innutrient.api;
 import dev.uapi.api.services.UApiService;
 import dev.uapi.api.services.UApiServices;
 import master.innutrient.nutrition.NutritionProfile;
+import master.innutrient.nutrition.DietQuality;
+import master.innutrient.nutrition.MealQuality;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
@@ -19,5 +21,8 @@ public interface NutritionApi extends UApiService {
     double getNutritionLevel(ServerPlayer player, ResourceLocation nutrient);
     Map<ResourceLocation, Double> getAllNutritionLevels(ServerPlayer player);
     double getBalanceScore(ServerPlayer player);
+    DietQuality getDietQuality(ServerPlayer player);
+    MealQuality getMealQuality(ItemStack stack);
+    PlayerNutritionSnapshot getPlayerNutrition(ServerPlayer player);
     void registerRecipeResolver(NutritionRecipeResolver resolver);
 }

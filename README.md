@@ -2,19 +2,19 @@
 
 # Innutrient
 
-Innutrient is a configurable nutrition system for Minecraft that rewards a varied diet. Foods contribute to data-driven nutrient groups, and complex meals can inherit their composition from recipe ingredients.
+Innutrient rewards balanced, varied, and well-prepared diets without replacing Minecraft's hunger system.
 
-- Minecraft 1.21.1
+Food fills data-driven nutrient groups such as fruits, vegetables, grains, proteins, and sugars. Repeating the same food gradually reduces only its nutrition efficiency, while meals made from several useful groups earn Meal Quality bonuses. Sustain a healthy range to improve Diet Quality and gain modest survival benefits; long deficiencies and excessive sugar have practical consequences.
+
+The nutrition screen and food tooltips explain what matters in normal play. Complex vanilla and modded meals inherit their composition from recipes, and NeoForge Common Tags classify compatible ingredients automatically.
+
+- Minecraft 1.21.1 and 26.2 on separate release branches
 - NeoForge
-- Java 21
 - Requires [U-API](https://github.com/tracerxbrhd/u-api)
+- Optional support for major food mods; none are required
+- Fully configurable through server config and datapacks
+- English and Russian localization
 
-Modpack authors can add or replace nutrient groups, classify ingredients with item tags, define exact food profiles, tune gain and decay, and configure effects through datapacks and server configuration.
-
-Farmer's Delight is supported optionally through its exposed recipe ingredients and curated ingredient tags. Innutrient does not require or bundle Farmer's Delight.
-
-Technical documentation lives in [`docs/`](docs/).
-
-Release builds are tag-driven and publish to GitHub Releases, Modrinth, and optionally CurseForge. See [`docs/RELEASING.md`](docs/RELEASING.md).
+Modpack authors can redefine groups, override any food profile, add compatibility datapacks, and configure sustained effect rules. Technical details and the current compatibility matrix live in [`docs/`](docs/).
 
 Copyright © 2026 tracerxbrhd / Underworld Studio. All rights reserved. See [LICENSE](LICENSE).

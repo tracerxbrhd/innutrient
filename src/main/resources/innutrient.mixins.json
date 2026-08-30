@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "master.innutrient.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "FoodDataMixin",
+    "PlayerExhaustionMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

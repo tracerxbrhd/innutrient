@@ -1,25 +1,29 @@
 # Food resolution
 
-Innutrient resolves each item with this precedence:
+Every edible item is resolved in this order:
 
 ```text
-matching explicit food rules
-→ configured nutrient-group item tags
-→ recipe-derived composition
-→ unresolved
+explicit food profile / datapack override
+→ specialized or generic recipe inheritance
+→ configured nutrient item tags (including Common Tags)
+→ unclassified
 ```
 
-Results are cached by Item. A datapack reload rebuilds the output-to-recipe index and invalidates the cache; eating and tooltips do not walk recipe graphs during normal play.
+An explicit rule always wins and can set `disable_automatic`. Recipe inheritance precedes tags so a multi-ingredient meal keeps its complete composition instead of being reduced to a single output tag.
 
 ## Recipe algorithm
 
-1. Recipes are indexed and sorted by recipe ID.
-2. The first registered `NutritionRecipeResolver` supporting a recipe exposes its ingredients. The built-in lowest-priority adapter accepts any recipe with a non-empty `Recipe#getIngredients()` result.
-3. Ingredient alternatives are sorted by item ID, capped by `maxIngredientAlternatives`, recursively resolved, and averaged. Unresolved alternatives do not invent nutrition.
-4. Resolved ingredient profiles are summed and normalized for that recipe.
-5. If several capped recipes produce the same item, their resolved compositions are averaged in recipe-ID order.
-6. A visited-item set stops cycles, and `maxDepth` stops pathological chains.
+1. On server reload, recipes are indexed by output and deterministically sorted by recipe ID.
+2. The highest-priority registered resolver exposes ingredients. The built-in fallback uses `Recipe#getIngredients()` (or the current-version equivalent).
+3. Ingredient alternatives are sorted by item ID, capped, recursively resolved, and averaged.
+4. Resolved ingredient profiles are combined and normalized. Multiple recipes for one output are averaged within the configured cap.
+5. A visited-item guard stops cycles; maximum depth, alternatives, and recipes are bounded.
+6. Profiles, Meal Quality, and baseline tooltip gain are cached by item and synchronized after reload.
 
-Output stack count does not alter composition percentages; it affects neither the normalized profile nor the food's vanilla hunger/saturation value used for total gain.
+Eating and client tooltips do not traverse the recipe graph. Datapack/recipe reload invalidates the server cache, rebuilds the synchronized catalog, reconciles online players, and refreshes clients.
 
-The derived balance score is the geometric mean of each required group's closeness to its configured healthy range. This prevents high groups from hiding one severe deficiency. Groups can independently opt out of low or high penalties, so sugar-like asymmetric ranges work naturally.
+Missing ingredients and unresolved alternatives do not invent nutrition. Output stack count does not change composition percentages or vanilla food properties.
+
+## Common Tags
+
+Both supported NeoForge versions use verified `c:foods/*` tags for fruit, berries, vegetables, bread, dough, raw/cooked meat, raw/cooked fish, cookies, candy, and pies, plus `c:eggs` and `c:crops/wheat`. The 1.21.1 branch also accepts optional legacy aliases used by Pam's HarvestCraft 2 and Farm & Charm. Compatibility datapacks can extend Innutrient's group item tags without Java code.
