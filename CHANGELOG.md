@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.1 - 2026-09-01
+
+- Updated the required U-API line to the stable 3.0.0 release.
+- Added branch CI so release artifacts are compiled and tested before tagging.
+- Contains no gameplay or persisted-data changes from 1.0.0.
+
 ## 1.0.0
 
 - Added sustained Diet Quality states with configurable thresholds, hysteresis, and transition time.
