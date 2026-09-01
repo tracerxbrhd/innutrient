@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [master, "port/**", "mc/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Resolve U-API source
+        id: uapi
+        shell: bash
+        run: |
+          set -euo pipefail
+          property() { grep -E "^$1=" gradle.properties | head -n1 | cut -d= -f2- | xargs; }
+          version="$(property u_api_version)"
+          minecraft="$(property minecraft_version)"
+          java="$(property java_version)"
+          echo "repository=${{ vars.U_API_REPOSITORY || format('{0}/u-api', github.repository_owner) }}" >> "$GITHUB_OUTPUT"
+          echo "ref=v${version}+mc${minecraft}" >> "$GITHUB_OUTPUT"
+          echo "java=${java}" >> "$GITHUB_OUTPUT"
+      - name: Checkout matching U-API
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ steps.uapi.outputs.repository }}
+          ref: ${{ steps.uapi.outputs.ref }}
+          path: u-api
+          token: ${{ secrets.U_API_REPOSITORY_TOKEN || secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ steps.uapi.outputs.java }}
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build and test with local U-API sources
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon clean build -Pu_api_local_path=u-api

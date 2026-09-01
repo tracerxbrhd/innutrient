@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.1 - 2026-09-01
+
+- Disabled filtering for the pixel-art mod icon so it stays sharp in NeoForge mod lists.
+- Verified the release build against U-API 2.1.2 without raising the existing compatible runtime
+  dependency range.
+- Added branch CI so release artifacts are compiled and tested before tagging.
+
 ## 1.0.0
 
 - Added sustained Diet Quality states with configurable thresholds, hysteresis, and transition time.

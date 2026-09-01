@@ -9,6 +9,7 @@ version = "${mod_version}"
 displayName = "${mod_name}"
 displayURL = "https://github.com/tracerxbrhd/innutrient"
 logoFile = "innutrient_icon.png"
+logoBlur = false
 authors = "${mod_authors}"
 description = '''${mod_description}'''
 
