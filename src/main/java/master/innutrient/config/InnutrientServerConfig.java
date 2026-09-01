@@ -58,6 +58,12 @@ public final class InnutrientServerConfig {
 
     public static final ModConfigSpec.BooleanValue VARIETY_ENABLED = BUILDER
         .define("variety.enabled", true);
+    public static final ModConfigSpec.IntValue VARIETY_MEMORY_CAPACITY = BUILDER.comment(
+        "Maximum number of recent foods retained in bounded Diet Memory.")
+        .defineInRange("variety.memoryCapacity", 16, 4, 32);
+    public static final ModConfigSpec.IntValue VARIETY_SCORE_WINDOW_TICKS = BUILDER.comment(
+        "Only Diet Memory entries this recent contribute to the 0..100 Food Variety Score.")
+        .defineInRange("variety.scoreWindowTicks", 48000, 1200, 2400000);
     public static final ModConfigSpec.DoubleValue VARIETY_REPEAT_PENALTY = BUILDER.comment(
         "Nutrition efficiency lost for each consecutive repeat of the same food.")
         .defineInRange("variety.penaltyPerRepeat", 0.10, 0, 1);

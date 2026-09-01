@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.1.0 - 2026-09-02
+
+- Replaced the single-food repeat streak with bounded Diet Memory holding the latest 16 meals by default.
+- Added a deterministic 0–100 Food Variety Score based on food identity, repeat frequency, nutrient
+  composition, nutrient-group coverage, Meal Quality, and a configurable freshness window.
+- Added Repetitive, Limited, Varied, Diverse, and Highly Diverse variety tiers in English and Russian.
+- Kept the familiar gentle repetition penalty: it still affects only Innutrient efficiency, never vanilla
+  hunger or saturation, and now derives its streak from Diet Memory.
+- Added Food Variety to the U-API nutrition screen and `/innutrient show`, plus a bounded
+  `/innutrient variety` history view.
+- Expanded `NutritionApi` with immutable Variety Score, tier, and recent-food snapshots.
+- Introduced player data version 3 with automatic migration from Innutrient 1.0 saves while preserving
+  nutrient levels and sustained Diet Quality.
+- Bumped the synchronized attachment protocol and added coverage for migration, capacity, expiry,
+  repeated foods, composition diversity, and immutable state behavior.
+
 ## 1.0.1 - 2026-09-01
 
 - Updated the required U-API line to the stable 3.0.0 release.

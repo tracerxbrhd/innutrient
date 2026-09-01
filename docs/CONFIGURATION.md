@@ -29,11 +29,23 @@ Separate activation/deactivation thresholds provide hysteresis; every candidate 
 ## Food Variety
 
 - `variety.enabled`
+- `variety.memoryCapacity` (default `16`, range `4..32`)
+- `variety.scoreWindowTicks` (default `48000`)
 - `variety.penaltyPerRepeat` (default `0.10`)
 - `variety.minimumEfficiency` (default `0.60`)
 - `variety.recoveryTicks`
 
-Only the current repeated-food streak is stored. Another food or elapsed recovery time resets it.
+Diet Memory stores only the newest configured number of meals. `variety.enabled` controls the gameplay
+efficiency penalty; bounded memory and its diagnostic score remain available when the penalty is disabled.
+Eating another food resets the consecutive-repeat penalty immediately; waiting out `recoveryTicks` also
+resets it. Entries older than `scoreWindowTicks` remain bounded save data until displaced but no longer
+contribute to the score.
+
+The score is deliberately simple: 50% food-identity diversity and repeat distribution, 25% distinct
+quantized nutrient compositions, 20% coverage of groups required for balance, and 5% average Meal
+Quality. The result builds confidence over up to eight recent meals, so one new food cannot instantly
+produce a perfect score. Fixed tiers are Repetitive (`0–19`), Limited (`20–39`), Varied (`40–59`),
+Diverse (`60–79`), and Highly Diverse (`80–100`).
 
 ## Meal Quality
 

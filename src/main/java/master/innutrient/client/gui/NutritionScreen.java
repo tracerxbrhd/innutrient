@@ -34,6 +34,7 @@ public final class NutritionScreen extends UIScreen implements UApiTabHost {
     private UILabel titleLabel;
     private UILabel balanceLabel;
     private UILabel qualityLabel;
+    private UILabel varietyLabel;
     private UILabel contextLabel;
     private UIScrollContainer scroll;
 
@@ -54,6 +55,7 @@ public final class NutritionScreen extends UIScreen implements UApiTabHost {
         titleLabel.setShadow(true);
         balanceLabel = panel.add(new UILabel(Component.empty(), ColorToken.ACCENT_SUCCESS));
         qualityLabel = panel.add(new UILabel(Component.empty(), ColorToken.TEXT_PRIMARY));
+        varietyLabel = panel.add(new UILabel(Component.empty(), ColorToken.TEXT_PRIMARY));
         contextLabel = panel.add(new UILabel(Component.empty(), ColorToken.TEXT_MUTED));
         scroll = panel.add(new UIScrollContainer());
         scroll.setWheelStep(ROW_HEIGHT + ROW_GAP);
@@ -63,15 +65,16 @@ public final class NutritionScreen extends UIScreen implements UApiTabHost {
     @Override
     protected void layoutUi(UIContainer root) {
         int panelWidth = Math.min(360, Math.max(220, width - 32));
-        int panelHeight = Math.min(330, Math.max(170, height - 48));
+        int panelHeight = Math.min(346, Math.max(186, height - 48));
         int left = (width - panelWidth) / 2;
         int top = (height - panelHeight) / 2;
         panel.setBounds(left, top, panelWidth, panelHeight);
         titleLabel.setBounds(left + 12, top + 12, panelWidth - 24, 12);
         balanceLabel.setBounds(left + 12, top + 30, panelWidth - 24, 12);
         qualityLabel.setBounds(left + 12, top + 46, panelWidth - 24, 12);
-        contextLabel.setBounds(left + 12, top + 62, panelWidth - 24, 12);
-        scroll.setBounds(left + 10, top + 82, panelWidth - 20, panelHeight - 92);
+        varietyLabel.setBounds(left + 12, top + 62, panelWidth - 24, 12);
+        contextLabel.setBounds(left + 12, top + 78, panelWidth - 24, 12);
+        scroll.setBounds(left + 10, top + 98, panelWidth - 20, panelHeight - 108);
         int contentHeight = rows.isEmpty() ? 24 : rows.size() * (ROW_HEIGHT + ROW_GAP) - ROW_GAP;
         scroll.setContentHeight(contentHeight);
         int rowY = scroll.bounds().y() - scroll.scrollOffset();
@@ -102,6 +105,11 @@ public final class NutritionScreen extends UIScreen implements UApiTabHost {
                 NutritionService.balanceScore(state, ClientNutritionCatalog.groups()))));
         qualityLabel.setText(Component.translatable("screen.innutrient.diet_quality",
             Component.translatable(state.dietQuality().translationKey())));
+        long gameTime = minecraft.level == null ? 0 : minecraft.level.getGameTime();
+        var variety = NutritionService.variety(state, gameTime, ClientNutritionCatalog.groups());
+        varietyLabel.setText(Component.translatable("screen.innutrient.variety",
+            String.format(Locale.ROOT, "%.0f%%", variety.value()),
+            Component.translatable(variety.tier().translationKey())));
         var low = ClientNutritionCatalog.groups().stream()
             .filter(group -> group.penalizeLow() && (group.status(state.get(group)) == NutrientStatus.DEFICIENT
                 || group.status(state.get(group)) == NutrientStatus.BELOW_TARGET)).findFirst();
@@ -133,7 +141,7 @@ public final class NutritionScreen extends UIScreen implements UApiTabHost {
     }
 
     private int panelTop() {
-        int panelHeight = Math.min(330, Math.max(170, height - 48));
+        int panelHeight = Math.min(346, Math.max(186, height - 48));
         return (height - panelHeight) / 2;
     }
 
