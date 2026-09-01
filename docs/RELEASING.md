@@ -6,8 +6,8 @@ Publishing remains tag-driven. Normal pushes never publish.
 
 | Branch | Minecraft | Java | U-API line | Stable tag |
 |---|---:|---:|---:|---|
-| `master` | 1.21.1 | 21 | 2.x | `v1.0.0+mc1.21.1` |
-| `port/26.2` | 26.2 | 25 | 3.x | `v1.0.0+mc26.2` |
+| `master` | 1.21.1 | 21 | 2.x | `v1.1.0+mc1.21.1` |
+| `port/26.2` | 26.2 | 25 | 3.x | `v1.1.0+mc26.2` |
 
 Minecraft 26.2 requires the newer Java toolchain; the 1.21.1 branch remains Java 21. Each tag must point to the matching branch commit.
 

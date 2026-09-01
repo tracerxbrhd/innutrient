@@ -41,6 +41,11 @@ public final class InnutrientCommands {
                 .then(Commands.argument("player", EntityArgument.player())
                     .requires(source -> source.hasPermission(2))
                     .executes(context -> show(context.getSource(), EntityArgument.getPlayer(context, "player")))))
+            .then(Commands.literal("variety")
+                .executes(context -> variety(context.getSource(), context.getSource().getPlayerOrException()))
+                .then(Commands.argument("player", EntityArgument.player())
+                    .requires(source -> source.hasPermission(2))
+                    .executes(context -> variety(context.getSource(), EntityArgument.getPlayer(context, "player")))))
             .then(Commands.literal("set").requires(source -> source.hasPermission(2))
                 .then(Commands.argument("player", EntityArgument.player())
                     .then(groupArgument().then(Commands.argument("value", DoubleArgumentType.doubleArg(0, 100))
@@ -91,7 +96,35 @@ public final class InnutrientCommands {
         source.sendSuccess(() -> Component.translatable("command.innutrient.show.balance", balance), false);
         source.sendSuccess(() -> Component.translatable("command.innutrient.show.quality",
             Component.translatable(state.dietQuality().translationKey())), false);
+        var variety = NutritionService.variety(player);
+        source.sendSuccess(() -> Component.translatable("command.innutrient.show.variety",
+            String.format(Locale.ROOT, "%.0f%%", variety.value()),
+            Component.translatable(variety.tier().translationKey())), false);
         return NutritionRegistry.groups().size();
+    }
+
+    private static int variety(CommandSourceStack source, ServerPlayer player) {
+        var state = NutritionService.get(player);
+        var summary = NutritionService.variety(player);
+        source.sendSuccess(() -> Component.translatable("command.innutrient.variety.header",
+            player.getDisplayName(), String.format(Locale.ROOT, "%.0f%%", summary.value()),
+            Component.translatable(summary.tier().translationKey())), false);
+        if (state.dietMemory().isEmpty()) {
+            source.sendSuccess(() -> Component.translatable("command.innutrient.variety.empty"), false);
+            return 0;
+        }
+        int shown = Math.min(8, state.dietMemory().size());
+        long gameTime = player.level().getGameTime();
+        for (int offset = 0; offset < shown; offset++) {
+            var entry = state.dietMemory().get(state.dietMemory().size() - 1 - offset);
+            long secondsAgo = Math.max(0, gameTime - entry.gameTime()) / 20;
+            source.sendSuccess(() -> Component.translatable("command.innutrient.variety.entry",
+                entry.foodId(), Component.translatable(entry.mealQuality().translationKey()), secondsAgo), false);
+        }
+        int hidden = state.dietMemory().size() - shown;
+        if (hidden > 0) source.sendSuccess(() -> Component.translatable(
+            "command.innutrient.variety.more", hidden), false);
+        return shown;
     }
 
     private static int change(CommandSourceStack source, ServerPlayer player,

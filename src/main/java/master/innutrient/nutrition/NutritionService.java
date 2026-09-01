@@ -11,13 +11,15 @@ import net.minecraft.world.food.FoodProperties;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public final class NutritionService {
     private NutritionService() {}
 
     public static NutritionState get(ServerPlayer player) {
         NutritionState current = player.getData(NutritionAttachments.STATE);
-        NutritionState reconciled = current.reconcile(NutritionRegistry.groups());
+        NutritionState reconciled = current.reconcile(NutritionRegistry.groups(),
+            InnutrientServerConfig.VARIETY_MEMORY_CAPACITY.get());
         if (reconciled != current) player.setData(NutritionAttachments.STATE, reconciled);
         return reconciled;
     }
@@ -54,9 +56,14 @@ public final class NutritionService {
         NutritionState current = get(player);
         double varietyEfficiency = 1.0;
         FoodVariety.Result variety = null;
-        if (InnutrientServerConfig.VARIETY_ENABLED.get() && foodId != null) {
-            variety = FoodVariety.consume(current.lastFood(), current.repeatCount(), current.lastFoodGameTime(),
-                foodId, player.level().getGameTime(), InnutrientServerConfig.VARIETY_REPEAT_PENALTY.get(),
+        if (foodId != null) {
+            long gameTime = player.level().getGameTime();
+            DietMemoryEntry entry = DietMemoryEntry.from(foodId, gameTime, profile,
+                MealQualityEngine.classify(profile), InnutrientServerConfig.MEAL_MINIMUM_GROUP_SHARE.get());
+            double repeatPenalty = InnutrientServerConfig.VARIETY_ENABLED.get()
+                ? InnutrientServerConfig.VARIETY_REPEAT_PENALTY.get() : 0;
+            variety = FoodVariety.consume(current.dietMemory(), entry,
+                InnutrientServerConfig.VARIETY_MEMORY_CAPACITY.get(), repeatPenalty,
                 InnutrientServerConfig.VARIETY_MINIMUM_EFFICIENCY.get(),
                 InnutrientServerConfig.VARIETY_RECOVERY_TICKS.get());
             varietyEfficiency = variety.efficiency();
@@ -70,7 +77,7 @@ public final class NutritionService {
             if (weight > 0) changed = changed.add(group, totalGain * weight * group.gainMultiplier());
         }
         if (variety != null)
-            changed = changed.withFoodStreak(variety.food(), variety.repeatCount(), variety.gameTime());
+            changed = changed.withDietMemory(variety.memory());
         changed = updateDietQuality(changed, player.level().getGameTime());
         update(player, changed, true);
         return totalGain;
@@ -115,6 +122,26 @@ public final class NutritionService {
 
     public static DietQuality dietQuality(ServerPlayer player) {
         return get(player).dietQuality();
+    }
+
+    public static FoodVariety.Score variety(ServerPlayer player) {
+        return variety(get(player), player.level().getGameTime(), NutritionRegistry.groups());
+    }
+
+    public static FoodVariety.Score variety(NutritionState state, long gameTime, List<NutrientGroup> groups) {
+        Set<ResourceLocation> requiredGroups = groups.stream().filter(NutrientGroup::requiredForBalance)
+            .map(NutrientGroup::id).collect(java.util.stream.Collectors.toUnmodifiableSet());
+        return FoodVariety.score(state.dietMemory(), gameTime,
+            InnutrientServerConfig.VARIETY_SCORE_WINDOW_TICKS.get(), requiredGroups,
+            Math.min(8, InnutrientServerConfig.VARIETY_MEMORY_CAPACITY.get()));
+    }
+
+    public static double varietyScore(ServerPlayer player) {
+        return variety(player).value();
+    }
+
+    public static VarietyTier varietyTier(ServerPlayer player) {
+        return variety(player).tier();
     }
 
     public static void tickDietQuality(ServerPlayer player) {

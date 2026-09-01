@@ -27,6 +27,12 @@ public enum MealQuality {
         return "meal_quality.innutrient." + serializedName();
     }
 
+    public static MealQuality fromSerializedName(String name) {
+        if (name != null) for (MealQuality quality : values())
+            if (quality.serializedName().equalsIgnoreCase(name)) return quality;
+        return BASIC;
+    }
+
     public static MealQuality fromGroupCount(int groups) {
         if (groups >= DIVERSE.minimumGroups) return DIVERSE;
         if (groups >= COMPLETE.minimumGroups) return COMPLETE;
