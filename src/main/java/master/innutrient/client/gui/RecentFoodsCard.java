@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.List;
 
 final class RecentFoodsCard extends UIComponent implements DashboardTooltipSource {
+    private static final ItemStack EMPTY_ICON = new ItemStack(Items.BOWL);
     private List<DisplayFood> foods = List.of();
     private List<DietMemoryEntry> memorySnapshot = List.of();
     private long gameTime;
@@ -40,24 +41,29 @@ final class RecentFoodsCard extends UIComponent implements DashboardTooltipSourc
 
     @Override
     protected void renderComponent(UIRenderContext context) {
-        DashboardRender.card(context.graphics(), bounds(), bounds().contains(context.mouseX(), context.mouseY()),
-            theme().color(ColorToken.ACCENT_PRIMARY));
+        DashboardRender.section(context.graphics(), bounds());
         DashboardRender.drawTrimmed(context.graphics(), context.font(),
             Component.translatable("screen.innutrient.dashboard.recent_foods"), bounds().x() + 10,
-            bounds().y() + 8, bounds().width() - 20, theme().color(ColorToken.TEXT_SECONDARY), true);
-        context.graphics().fill(bounds().x() + 9, bounds().y() + 24, bounds().right() - 8,
-            bounds().y() + 25, DashboardRender.DIVIDER);
+            bounds().y() + 8, bounds().width() - 20, theme().color(ColorToken.ACCENT_PRIMARY), false);
+        DashboardRender.divider(context.graphics(), bounds().x() + 9, bounds().right() - 9, bounds().y() + 24);
         if (foods.isEmpty()) {
+            context.graphics().fill(bounds().x() + 9, bounds().y() + 33, bounds().x() + 31,
+                bounds().y() + 55, DashboardRender.METRIC_BACKGROUND);
+            context.graphics().item(EMPTY_ICON, bounds().x() + 12, bounds().y() + 36);
             DashboardRender.drawTrimmed(context.graphics(), context.font(),
-                Component.translatable("screen.innutrient.dashboard.no_recent_foods"), bounds().x() + 10,
-                bounds().y() + 34, bounds().width() - 20, theme().color(ColorToken.TEXT_MUTED), false);
+                Component.translatable("screen.innutrient.dashboard.no_recent_foods"), bounds().x() + 38,
+                bounds().y() + 34, bounds().width() - 47, theme().color(ColorToken.TEXT_PRIMARY), true);
+            DashboardRender.drawWrapped(context.graphics(), context.font(),
+                Component.translatable("screen.innutrient.dashboard.no_recent_foods_detail"), bounds().x() + 38,
+                bounds().y() + 47, Math.max(0, bounds().width() - 47), 2,
+                theme().color(ColorToken.TEXT_MUTED), false);
             return;
         }
-        int rowY = bounds().y() + 29;
+        int rowY = bounds().y() + 30;
         for (DisplayFood food : foods) {
             boolean hovered = rowBounds(rowY).contains(context.mouseX(), context.mouseY());
-            if (hovered) context.graphics().fill(bounds().x() + 5, rowY - 2, bounds().right() - 5,
-                rowY + 23, DashboardRender.CARD_HOVER);
+            DashboardRender.interactiveRow(context.graphics(), rowBounds(rowY), hovered,
+                theme().color(ColorToken.ACCENT_PRIMARY));
             context.graphics().item(food.stack(), bounds().x() + 8, rowY + 1);
             int textX = bounds().x() + 29;
             int timeWidth = Math.max(28, bounds().width() / 5);
@@ -71,16 +77,16 @@ final class RecentFoodsCard extends UIComponent implements DashboardTooltipSourc
             DashboardRender.drawTrimmed(context.graphics(), context.font(),
                 Component.translatable(food.entry().mealQuality().translationKey()), textX, rowY + 12,
                 bounds().right() - textX - 8, theme().color(ColorToken.TEXT_MUTED), false);
-            rowY += 27;
+            rowY += DashboardLayout.RECENT_ROW_HEIGHT;
         }
     }
 
     @Override
     public List<Component> tooltipAt(double mouseX, double mouseY) {
         if (!bounds().contains(mouseX, mouseY) || foods.isEmpty()) return List.of();
-        double localY = mouseY - (bounds().y() + 27);
+        double localY = mouseY - (bounds().y() + 28);
         if (localY < 0) return List.of();
-        int index = (int) (localY / 27);
+        int index = (int) (localY / DashboardLayout.RECENT_ROW_HEIGHT);
         if (index < 0 || index >= foods.size()) return List.of();
         DisplayFood food = foods.get(index);
         return List.of(
@@ -93,7 +99,7 @@ final class RecentFoodsCard extends UIComponent implements DashboardTooltipSourc
 
     private dev.uapi.client.ui.core.UIBounds rowBounds(int rowY) {
         return new dev.uapi.client.ui.core.UIBounds(bounds().x() + 5, rowY - 2,
-            Math.max(0, bounds().width() - 10), 25);
+            Math.max(0, bounds().width() - 10), DashboardLayout.RECENT_ROW_HEIGHT);
     }
 
     private Component relativeTime(long eatenAt) {
