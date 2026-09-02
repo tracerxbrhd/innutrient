@@ -32,9 +32,9 @@ public final class NutritionScreen extends UIScreen implements UApiTabHost {
     private final List<DashboardTooltipSource> tooltipSources = new ArrayList<>();
     private UIPanel panel;
     private UILabel titleLabel;
-    private UILabel subtitleLabel;
     private UIScrollContainer scroll;
     private NutritionSummaryCard summary;
+    private NutrientBalanceSection nutrientSection;
     private DashboardGuidanceCard guidance;
     private DashboardSectionLabel nutrientTitle;
     private UILabel emptyGroupsLabel;
@@ -57,13 +57,13 @@ public final class NutritionScreen extends UIScreen implements UApiTabHost {
     protected void buildUi(UIContainer root) {
         root.setTheme(UIThemes.ARCANE);
         panel = root.add(new UIPanel());
-        titleLabel = panel.add(new UILabel(Component.translatable("screen.innutrient.title"), ColorToken.TEXT_PRIMARY));
+        titleLabel = panel.add(new UILabel(Component.translatable("screen.innutrient.dashboard.subtitle"),
+            ColorToken.TEXT_PRIMARY));
         titleLabel.setShadow(true);
-        subtitleLabel = panel.add(new UILabel(Component.translatable("screen.innutrient.dashboard.subtitle"),
-            ColorToken.TEXT_MUTED));
         scroll = panel.add(new UIScrollContainer());
-        scroll.setWheelStep(27);
+        scroll.setWheelStep(DashboardLayout.NUTRIENT_ROW_HEIGHT);
         summary = scroll.add(new NutritionSummaryCard());
+        nutrientSection = scroll.add(new NutrientBalanceSection());
         guidance = scroll.add(new DashboardGuidanceCard());
         nutrientTitle = scroll.add(new DashboardSectionLabel(
             Component.translatable("screen.innutrient.dashboard.nutrient_balance")));
@@ -75,6 +75,7 @@ public final class NutritionScreen extends UIScreen implements UApiTabHost {
         scrollBar = panel.add(new DashboardScrollBar(scroll));
 
         tooltipSources.add(summary);
+        tooltipSources.add(nutrientSection);
         tooltipSources.add(guidance);
         tooltipSources.addAll(rows);
         tooltipSources.add(recentFoods);
@@ -86,13 +87,11 @@ public final class NutritionScreen extends UIScreen implements UApiTabHost {
 
     @Override
     protected void layoutUi(UIContainer root) {
-        currentLayout = DashboardLayout.calculate(width, height, rows.size(), recentFoods.visibleFoodCount());
+        currentLayout = DashboardLayout.calculate(width, height, rows.size(), recentFoods.visibleFoodCount(),
+            modifiers.visibleModifierCount());
         setBounds(panel, currentLayout.panel());
         DashboardLayout.Rect header = currentLayout.header();
-        int titleWidth = Math.min(Math.max(70, header.width() / 2), 190);
-        titleLabel.setBounds(header.x(), header.y() + 2, titleWidth, font.lineHeight);
-        subtitleLabel.setBounds(header.x() + titleWidth + 7, header.y() + 2,
-            Math.max(0, header.width() - titleWidth - 7), font.lineHeight);
+        titleLabel.setBounds(header.x(), header.y() + 2, header.width(), font.lineHeight);
         setBounds(scroll, currentLayout.viewport());
         scroll.setContentHeight(currentLayout.contentHeight());
         scrollBar.setBounds(currentLayout.viewport().right() - 3, currentLayout.viewport().y(), 3,
@@ -100,12 +99,14 @@ public final class NutritionScreen extends UIScreen implements UApiTabHost {
 
         int offset = scroll.scrollOffset();
         setContentBounds(summary, currentLayout.summary(), offset);
+        setContentBounds(nutrientSection, currentLayout.nutrientSection(), offset);
         setContentBounds(guidance, currentLayout.guidance(), offset);
         setContentBounds(nutrientTitle, currentLayout.nutrientTitle(), offset);
         emptyGroupsLabel.setVisible(rows.isEmpty());
-        if (rows.isEmpty()) emptyGroupsLabel.setBounds(currentLayout.viewport().x() + 10,
-            currentLayout.viewport().y() + currentLayout.nutrientTitle().bottom() + 9 - offset,
-            Math.max(0, currentLayout.nutrientTitle().width() - 20), font.lineHeight);
+        if (rows.isEmpty()) emptyGroupsLabel.setBounds(
+            currentLayout.viewport().x() + currentLayout.nutrientSection().x() + 12,
+            currentLayout.viewport().y() + currentLayout.nutrientSection().y() + 38 - offset,
+            Math.max(0, currentLayout.nutrientSection().width() - 24), font.lineHeight);
         for (int index = 0; index < rows.size(); index++)
             setContentBounds(rows.get(index), currentLayout.nutrientRows().get(index), offset);
         setContentBounds(recentFoods, currentLayout.recentFoods(), offset);
@@ -139,9 +140,11 @@ public final class NutritionScreen extends UIScreen implements UApiTabHost {
         DashboardGuidance.Result context = DashboardGuidance.select(state, ClientNutritionCatalog.groups(), variety);
         guidance.update(context.message(), context.warning());
         int previousFoodCount = recentFoods.visibleFoodCount();
+        int previousModifierCount = modifiers.visibleModifierCount();
         recentFoods.update(state.dietMemory(), gameTime);
         modifiers.update(state.dietQuality(), settings);
-        if (previousFoodCount != recentFoods.visibleFoodCount()) panel.invalidateLayout();
+        if (previousFoodCount != recentFoods.visibleFoodCount()
+            || previousModifierCount != modifiers.visibleModifierCount()) panel.invalidateLayout();
     }
 
     private void setContentBounds(UIComponent component, DashboardLayout.Rect rect, int offset) {
@@ -155,7 +158,9 @@ public final class NutritionScreen extends UIScreen implements UApiTabHost {
 
     private DashboardLayout.Layout layoutSnapshot() {
         return currentLayout == null
-            ? DashboardLayout.calculate(width, height, rows.size(), recentFoods == null ? 0 : recentFoods.visibleFoodCount())
+            ? DashboardLayout.calculate(width, height, rows.size(),
+                recentFoods == null ? 0 : recentFoods.visibleFoodCount(),
+                modifiers == null ? 0 : modifiers.visibleModifierCount())
             : currentLayout;
     }
 

@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.2.1 - 2026-09-02
+
+- Refined the Nutrition Dashboard with layered near-black surfaces, restrained purple accents, and a
+  clearer visual hierarchy without changing U-API navigation.
+- Unified Nutrient Balance into one compact section with 38-pixel rows, subtle dividers, and a single
+  shared Low / Target Range / High legend.
+- Separated nutrient identity from status: bars now use each data-driven group's configured color while
+  labels and markers communicate Healthy, Low, High, and Excessive states.
+- Simplified target ranges to a neutral track, subtle healthy zone, thin boundaries, and a current-value
+  marker; preserved text and tooltips for accessibility.
+- Reworked the Summary into one primary animated balance gauge and three compact secondary metrics.
+- Moved existing guidance into a compact Diet Insight card and improved wide-screen column balance.
+- Polished Recent Foods with denser interactive rows and a purposeful empty state.
+- Suppressed zero-value modifier rows and now shows only configured effects that differ from neutral.
+- Expanded responsive layout coverage across compact, wide, ultrawide, empty, populated, and custom-group
+  scenarios for both supported Minecraft branches.
+
 ## 1.2.0 - 2026-09-02
 
 - Rebuilt the U-API nutrition screen as one cohesive, responsive Nutrition Dashboard.

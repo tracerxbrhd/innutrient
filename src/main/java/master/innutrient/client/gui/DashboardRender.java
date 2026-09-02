@@ -10,10 +10,13 @@ import java.util.List;
 import java.util.Locale;
 
 final class DashboardRender {
-    static final int CARD_BACKGROUND = 0xC9181223;
-    static final int CARD_HOVER = 0xE0261A35;
-    static final int CARD_BORDER = 0xFF513267;
-    static final int DIVIDER = 0xFF352441;
+    static final int SECTION_BACKGROUND = 0xEB110D18;
+    static final int SUBTLE_BACKGROUND = 0xD9181320;
+    static final int METRIC_BACKGROUND = 0xB91D1726;
+    static final int ROW_HOVER = 0xB5261D31;
+    static final int SECTION_BORDER = 0xFF30243A;
+    static final int DIVIDER = 0xFF2A2133;
+    static final int TRACK_EMPTY = 0xFF231C2B;
     static final int LOW = 0xFFFF7777;
     static final int BELOW = 0xFFFFB65C;
     static final int HEALTHY = 0xFF79D995;
@@ -22,11 +25,30 @@ final class DashboardRender {
 
     private DashboardRender() {}
 
-    static void card(GuiGraphics graphics, UIBounds bounds, boolean hovered, int accent) {
+    static void section(GuiGraphics graphics, UIBounds bounds) {
         if (bounds.width() <= 0 || bounds.height() <= 0) return;
-        graphics.fill(bounds.x(), bounds.y(), bounds.right(), bounds.bottom(), hovered ? CARD_HOVER : CARD_BACKGROUND);
-        border(graphics, bounds, CARD_BORDER);
+        graphics.fill(bounds.x(), bounds.y(), bounds.right(), bounds.bottom(), SECTION_BACKGROUND);
+        border(graphics, bounds, SECTION_BORDER);
+    }
+
+    static void accentedSection(GuiGraphics graphics, UIBounds bounds, int accent) {
+        section(graphics, bounds);
         graphics.fill(bounds.x(), bounds.y(), bounds.x() + 2, bounds.bottom(), accent);
+    }
+
+    static void subtleCard(GuiGraphics graphics, UIBounds bounds) {
+        if (bounds.width() <= 0 || bounds.height() <= 0) return;
+        graphics.fill(bounds.x(), bounds.y(), bounds.right(), bounds.bottom(), SUBTLE_BACKGROUND);
+    }
+
+    static void interactiveRow(GuiGraphics graphics, UIBounds bounds, boolean hovered, int accent) {
+        if (!hovered || bounds.width() <= 0 || bounds.height() <= 0) return;
+        graphics.fill(bounds.x(), bounds.y(), bounds.right(), bounds.bottom(), ROW_HOVER);
+        graphics.fill(bounds.x(), bounds.y() + 3, bounds.x() + 1, bounds.bottom() - 3, accent);
+    }
+
+    static void divider(GuiGraphics graphics, int left, int right, int y) {
+        if (right > left) graphics.fill(left, y, right, y + 1, DIVIDER);
     }
 
     static void border(GuiGraphics graphics, UIBounds bounds, int color) {
@@ -44,6 +66,15 @@ final class DashboardRender {
             x, y, color, shadow);
     }
 
+    static void drawWrapped(GuiGraphics graphics, Font font, Component text, int x, int y, int maxWidth,
+                            int maxLines, int color, boolean shadow) {
+        if (maxWidth <= 0 || maxLines <= 0) return;
+        List<FormattedCharSequence> parts = font.split(text, maxWidth);
+        int count = Math.min(maxLines, parts.size());
+        for (int line = 0; line < count; line++)
+            graphics.drawString(font, parts.get(line), x, y + line * (font.lineHeight + 1), color, shadow);
+    }
+
     static String percent(double value) {
         return String.format(Locale.ROOT, "%.0f%%", value);
     }
@@ -51,5 +82,9 @@ final class DashboardRender {
     static String signedPercent(double multiplier, boolean inverse) {
         double change = (multiplier - 1.0) * 100.0 * (inverse ? -1 : 1);
         return String.format(Locale.ROOT, "%+.0f%%", change);
+    }
+
+    static int opaque(int rgb) {
+        return 0xFF000000 | (rgb & 0xFFFFFF);
     }
 }

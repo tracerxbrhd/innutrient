@@ -20,17 +20,22 @@ final class DashboardGuidanceCard extends UIComponent implements DashboardToolti
 
     @Override
     protected void renderComponent(UIRenderContext context) {
-        boolean hovered = bounds().contains(context.mouseX(), context.mouseY());
         int accent = warning ? theme().color(ColorToken.ACCENT_WARNING) : theme().color(ColorToken.ACCENT_SUCCESS);
-        DashboardRender.card(context.graphics(), bounds(), hovered, accent);
+        DashboardRender.accentedSection(context.graphics(), bounds(), accent);
         Component heading = Component.translatable("screen.innutrient.dashboard.guidance");
         DashboardRender.drawTrimmed(context.graphics(), context.font(), heading, bounds().x() + 10,
-            bounds().y() + 6, Math.max(0, bounds().width() / 3), theme().color(ColorToken.TEXT_MUTED), false);
-        int messageX = bounds().width() >= 430 ? bounds().x() + Math.max(92, bounds().width() / 4)
-            : bounds().x() + 10;
-        int messageY = bounds().width() >= 430 ? bounds().y() + 6 : bounds().y() + 22;
-        DashboardRender.drawTrimmed(context.graphics(), context.font(), message, messageX, messageY,
-            bounds().right() - messageX - 8, theme().color(ColorToken.TEXT_PRIMARY), true);
+            bounds().y() + 8, Math.max(0, bounds().width() - 20),
+            theme().color(ColorToken.ACCENT_PRIMARY), false);
+        DashboardRender.divider(context.graphics(), bounds().x() + 9, bounds().right() - 9, bounds().y() + 24);
+        context.graphics().fill(bounds().x() + 10, bounds().y() + 31, bounds().x() + 30,
+            bounds().y() + 52, DashboardRender.METRIC_BACKGROUND);
+        Component glyph = Component.literal(warning ? "!" : "◆");
+        int glyphX = bounds().x() + 20 - context.font().width(glyph) / 2;
+        DashboardRender.drawTrimmed(context.graphics(), context.font(), glyph, glyphX, bounds().y() + 37,
+            10, accent, true);
+        DashboardRender.drawWrapped(context.graphics(), context.font(), message, bounds().x() + 38,
+            bounds().y() + 31, Math.max(0, bounds().width() - 47), 2,
+            theme().color(ColorToken.TEXT_PRIMARY), true);
     }
 
     @Override
