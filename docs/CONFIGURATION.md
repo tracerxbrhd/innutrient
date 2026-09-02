@@ -65,6 +65,9 @@ Diverse (`60–79`), and Highly Diverse (`80–100`).
 
 `<quality>` is `balanced`, `optimal`, `poor`, or `severe`; Stable is neutral. Only vanilla FoodData natural regeneration is scaled.
 
+The Nutrition Dashboard displays these effective server values, including disabled bonus/penalty gates,
+from the synchronized catalog snapshot. Client configuration cannot alter the reported or applied values.
+
 ## Recipe resolution
 
 - `resolution.enableRecipeInheritance`

@@ -129,11 +129,16 @@ public final class NutritionService {
     }
 
     public static FoodVariety.Score variety(NutritionState state, long gameTime, List<NutrientGroup> groups) {
+        return variety(state, gameTime, groups, InnutrientServerConfig.VARIETY_SCORE_WINDOW_TICKS.get(),
+            Math.min(8, InnutrientServerConfig.VARIETY_MEMORY_CAPACITY.get()));
+    }
+
+    /** Pure display-compatible variant using the server settings synchronized with the catalog. */
+    public static FoodVariety.Score variety(NutritionState state, long gameTime, List<NutrientGroup> groups,
+                                            long scoreWindowTicks, int sampleTarget) {
         Set<Identifier> requiredGroups = groups.stream().filter(NutrientGroup::requiredForBalance)
             .map(NutrientGroup::id).collect(java.util.stream.Collectors.toUnmodifiableSet());
-        return FoodVariety.score(state.dietMemory(), gameTime,
-            InnutrientServerConfig.VARIETY_SCORE_WINDOW_TICKS.get(), requiredGroups,
-            Math.min(8, InnutrientServerConfig.VARIETY_MEMORY_CAPACITY.get()));
+        return FoodVariety.score(state.dietMemory(), gameTime, scoreWindowTicks, requiredGroups, sampleTarget);
     }
 
     public static double varietyScore(ServerPlayer player) {

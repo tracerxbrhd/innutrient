@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.2.0 - 2026-09-02
+
+- Rebuilt the U-API nutrition screen as one cohesive, responsive Nutrition Dashboard.
+- Added a compact overview for Nutrition Balance, Diet Quality, Food Variety, and the latest Meal Quality.
+- Replaced ordinary progress bars with accessible LOW / HEALTHY TARGET / HIGH range scales using labels,
+  patterns, status symbols, threshold markers, and subtle animated value transitions.
+- Added concise contextual guidance, a bounded six-entry Recent Foods view, relative meal times, and
+  Meal Quality context sourced from Diet Memory.
+- Added a Current Nutrition Modifiers card that reports the server's configured exhaustion, nutrition
+  efficiency, and natural-regeneration multipliers for the active Diet Quality.
+- Added responsive wide and compact layouts, whole-dashboard scrolling for small GUI sizes, trimmed long
+  translations, hover states, and detailed tooltips without floating widgets or a new HUD.
+- Synchronized a compact dashboard settings snapshot so dedicated-server values are displayed accurately;
+  bumped the network protocol to version 4 without changing the save format.
+- Added layout and settings tests covering common aspect ratios, ultrawide, small GUI sizes, empty/default/
+  custom group counts, scroll overflow, and bounded configuration data.
+
 ## 1.1.0 - 2026-09-02
 
 - Replaced the single-food repeat streak with bounded Diet Memory holding the latest 16 meals by default.
@@ -18,9 +35,10 @@
 
 ## 1.0.1 - 2026-09-01
 
-- Updated the required U-API line to the stable 3.0.0 release.
+- Disabled filtering for the pixel-art mod icon so it stays sharp in NeoForge mod lists.
+- Verified the release build against U-API 2.1.2 without raising the existing compatible runtime
+  dependency range.
 - Added branch CI so release artifacts are compiled and tested before tagging.
-- Contains no gameplay or persisted-data changes from 1.0.0.
 
 ## 1.0.0
 
@@ -31,18 +49,16 @@
 - Added sustained penalties for severe deficiency and excessive sugar.
 - Added synchronized numeric food tooltips with Meal Quality and advanced resolution-source details.
 - Expanded the U-API nutrition screen with Diet Quality and contextual low/high guidance.
-- Added verified NeoForge Common Tags and recursive effect-rule schema v2 with v1 compatibility.
+- Added verified NeoForge Common Tags plus optional legacy tag aliases used by major 1.21.1 food ecosystems.
+- Added recursive effect-rule schema v2 while retaining format-version 1 compatibility.
 - Expanded the public API with immutable player snapshots, Diet Quality, and Meal Quality.
 - Preserved bounded, cached, deterministic, and cycle-safe recipe inheritance with recipe-first automatic resolution.
-- Added feature parity for Minecraft 1.21.1 and 26.2 plus version-aware release automation.
-
-## 0.2.0-beta.1 - 2026-08-29
-
-- Ported Innutrient to Minecraft 26.2, NeoForge 26.2.0.28-beta, Java 25, and U-API 3.
-- Adapted food components, recipes, networking, GUI extraction, and resource identifiers to current APIs.
+- Added parity support for Minecraft 1.21.1 and 26.2, documentation, compatibility matrix, tests, and version-aware release automation.
 
 ## 0.1.0
 
 - Initial Minecraft 1.21.1 / NeoForge architecture.
 - Data-driven nutrient groups, food profiles, effect rules, and dynamic item tags.
-- Persistent synchronized player nutrition, bounded recursive recipes, U-API UI/API, commands, and localization.
+- Persistent synchronized player nutrition with hunger-based decay and configurable death retention.
+- Recursive cached recipe composition with cycle, depth, recipe-count, and ingredient-alternative bounds.
+- U-API nutrition screen, diagnostics, service API, commands, and English/Russian localization.

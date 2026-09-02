@@ -16,7 +16,8 @@ import java.util.List;
 import java.util.Map;
 
 public record NutritionCatalogPayload(List<NutrientGroup> groups,
-                                      Map<Identifier, NutritionFoodData> foods)
+                                      Map<Identifier, NutritionFoodData> foods,
+                                      NutritionDashboardSettings dashboardSettings)
     implements CustomPacketPayload {
     public static final Type<NutritionCatalogPayload> TYPE = new Type<>(Innutrient.id("catalog"));
     public static final StreamCodec<RegistryFriendlyByteBuf, NutritionCatalogPayload> STREAM_CODEC = new StreamCodec<>() {
@@ -36,7 +37,8 @@ public record NutritionCatalogPayload(List<NutrientGroup> groups,
                 MealQuality quality = qualityOrdinal < qualities.length ? qualities[qualityOrdinal] : MealQuality.BASIC;
                 foods.put(item, new NutritionFoodData(profile, baseGain, quality, buffer.readDouble()));
             }
-            return new NutritionCatalogPayload(List.copyOf(groups), Map.copyOf(foods));
+            NutritionDashboardSettings settings = readDashboardSettings(buffer);
+            return new NutritionCatalogPayload(List.copyOf(groups), Map.copyOf(foods), settings);
         }
 
         @Override
@@ -51,8 +53,15 @@ public record NutritionCatalogPayload(List<NutrientGroup> groups,
                 buffer.writeByte(food.mealQuality().ordinal());
                 buffer.writeDouble(food.mealMultiplier());
             });
+            writeDashboardSettings(buffer, payload.dashboardSettings());
         }
     };
+
+    public NutritionCatalogPayload {
+        groups = List.copyOf(groups);
+        foods = Map.copyOf(foods);
+        dashboardSettings = dashboardSettings == null ? NutritionDashboardSettings.DEFAULT : dashboardSettings;
+    }
 
     @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
 
@@ -103,5 +112,30 @@ public record NutritionCatalogPayload(List<NutrientGroup> groups,
         buffer.writeBoolean(profile.recipeId() != null);
         if (profile.recipeId() != null) buffer.writeIdentifier(profile.recipeId());
         buffer.writeVarInt(profile.resolutionDepth());
+    }
+
+    private static NutritionDashboardSettings readDashboardSettings(RegistryFriendlyByteBuf buffer) {
+        int modifierCount = Math.min(32, Math.max(0, buffer.readVarInt()));
+        List<NutritionDashboardSettings.DietModifier> modifiers = new ArrayList<>(modifierCount);
+        for (int index = 0; index < modifierCount; index++) modifiers.add(
+            new NutritionDashboardSettings.DietModifier(buffer.readDouble(), buffer.readDouble(), buffer.readDouble()));
+        int mealCount = Math.min(32, Math.max(0, buffer.readVarInt()));
+        List<Double> mealBonuses = new ArrayList<>(mealCount);
+        for (int index = 0; index < mealCount; index++) mealBonuses.add(buffer.readDouble());
+        return new NutritionDashboardSettings(modifiers, mealBonuses, buffer.readVarLong(), buffer.readVarInt());
+    }
+
+    private static void writeDashboardSettings(RegistryFriendlyByteBuf buffer,
+                                               NutritionDashboardSettings settings) {
+        buffer.writeVarInt(settings.dietModifiers().size());
+        settings.dietModifiers().forEach(modifier -> {
+            buffer.writeDouble(modifier.exhaustion());
+            buffer.writeDouble(modifier.nutritionEfficiency());
+            buffer.writeDouble(modifier.naturalRegeneration());
+        });
+        buffer.writeVarInt(settings.mealEfficiencyBonuses().size());
+        settings.mealEfficiencyBonuses().forEach(buffer::writeDouble);
+        buffer.writeVarLong(settings.varietyWindowTicks());
+        buffer.writeVarInt(settings.varietySampleTarget());
     }
 }
