@@ -13,9 +13,22 @@ Food Variety calculation is O(memory capacity). Entries outside the freshness wi
 score combines food uniqueness/repeat distribution (50%), composition uniqueness (25%), required-group
 coverage (20%), and Meal Quality (5%), then applies a sample-confidence factor capped at eight meals.
 
-The client receives an immutable catalog of nutrient metadata plus resolved food profile, baseline gain, Meal Quality, and meal multiplier. Tooltips are cache lookups. The U-API screen reads the synchronized attachment and never performs authoritative calculations.
+The client receives an immutable catalog of nutrient metadata plus resolved food profile, baseline gain,
+Meal Quality, meal multiplier, and a bounded Dashboard settings snapshot. The snapshot contains only the
+server's displayed Diet Quality multipliers, Meal Quality bonuses, and Food Variety window parameters;
+it does not grant the client gameplay authority. Tooltips are cache lookups. The U-API Dashboard reads the
+synchronized attachment and uses the server snapshot for an accurate presentation of authoritative rules.
 
-Network protocol version 3 accompanies the bounded Diet Memory stream codec. Login, respawn, dimension change, explicit request, and datapack sync refresh the client. Attachment synchronization handles state changes without a parallel packet protocol. Memory is sent only as part of bounded attachment updates; no tick-time history packet exists.
+Network protocol version 4 adds the Dashboard settings snapshot to the catalog payload. Login, respawn,
+dimension change, explicit request, and datapack sync refresh the client. Attachment synchronization handles
+state changes without a parallel packet protocol. Memory is sent only as part of bounded attachment updates;
+no tick-time history packet exists. The save data version remains 3.
+
+`NutritionScreen` remains a single U-API panel. A fixed header contains one clipped scroll viewport whose
+pure `DashboardLayout` selects compact or wide placement from actual GUI-space width. Nutrient groups remain
+fully data-driven; the layout has no fixed group count. Small screens scroll the entire dashboard, avoiding
+nested scroll regions and floating widgets. Item stacks used for recent-food icons are cached until Diet
+Memory changes, and retained components invalidate only when their display model changes.
 
 Non-death clones retain Diet Memory. Death follows the established reset semantics: nutrient levels use
 `deathRetentionPercent`, while Diet Memory and its old repeat state are cleared. Reconnect persistence is

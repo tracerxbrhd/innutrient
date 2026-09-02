@@ -4,6 +4,7 @@ import master.innutrient.network.NutritionCatalogPayload;
 import master.innutrient.nutrition.NutrientGroup;
 import master.innutrient.nutrition.NutritionProfile;
 import master.innutrient.network.NutritionFoodData;
+import master.innutrient.network.NutritionDashboardSettings;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -14,6 +15,7 @@ import java.util.Map;
 public final class ClientNutritionCatalog {
     private static volatile List<NutrientGroup> groups = List.of();
     private static volatile Map<ResourceLocation, NutritionFoodData> foods = Map.of();
+    private static volatile NutritionDashboardSettings dashboardSettings = NutritionDashboardSettings.DEFAULT;
     private static volatile long revision;
 
     private ClientNutritionCatalog() {}
@@ -21,6 +23,7 @@ public final class ClientNutritionCatalog {
     public static void replace(NutritionCatalogPayload payload) {
         groups = List.copyOf(payload.groups());
         foods = Map.copyOf(payload.foods());
+        dashboardSettings = payload.dashboardSettings();
         revision++;
     }
 
@@ -33,4 +36,5 @@ public final class ClientNutritionCatalog {
             new NutritionFoodData(NutritionProfile.unknown(), 0, null, 1));
     }
     public static long revision() { return revision; }
+    public static NutritionDashboardSettings dashboardSettings() { return dashboardSettings; }
 }

@@ -71,6 +71,9 @@ Trace recipe contributions below `minimumGroupShare` do not inflate meal tier.
 
 `<quality>` is `balanced`, `optimal`, `poor`, or `severe`. Stable is always neutral. Natural-regeneration modifiers apply only to vanilla FoodData healing; external healing sources are untouched.
 
+The Nutrition Dashboard displays these effective server values, including disabled bonus/penalty gates,
+from the synchronized catalog snapshot. Client configuration cannot alter the reported or applied values.
+
 ## Recipe resolution
 
 - `resolution.enableRecipeInheritance`

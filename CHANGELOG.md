@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.2.0 - 2026-09-02
+
+- Rebuilt the U-API nutrition screen as one cohesive, responsive Nutrition Dashboard.
+- Added a compact overview for Nutrition Balance, Diet Quality, Food Variety, and the latest Meal Quality.
+- Replaced ordinary progress bars with accessible LOW / HEALTHY TARGET / HIGH range scales using labels,
+  patterns, status symbols, threshold markers, and subtle animated value transitions.
+- Added concise contextual guidance, a bounded six-entry Recent Foods view, relative meal times, and
+  Meal Quality context sourced from Diet Memory.
+- Added a Current Nutrition Modifiers card that reports the server's configured exhaustion, nutrition
+  efficiency, and natural-regeneration multipliers for the active Diet Quality.
+- Added responsive wide and compact layouts, whole-dashboard scrolling for small GUI sizes, trimmed long
+  translations, hover states, and detailed tooltips without floating widgets or a new HUD.
+- Synchronized a compact dashboard settings snapshot so dedicated-server values are displayed accurately;
+  bumped the network protocol to version 4 without changing the save format.
+- Added layout and settings tests covering common aspect ratios, ultrawide, small GUI sizes, empty/default/
+  custom group counts, scroll overflow, and bounded configuration data.
+
 ## 1.1.0 - 2026-09-02
 
 - Replaced the single-food repeat streak with bounded Diet Memory holding the latest 16 meals by default.
