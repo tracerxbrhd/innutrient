@@ -17,4 +17,10 @@ The responsive Nutrition Dashboard brings balance, Diet Quality, Food Variety, r
 
 Modpack authors can redefine groups, override any food profile, add compatibility datapacks, and configure sustained effect rules. Technical details and the current compatibility matrix live in [`docs/`](docs/).
 
-Copyright © 2026 tracerxbrhd / Underworld Studio. All rights reserved. See [LICENSE](LICENSE).
+## License
+
+Innutrient source code is licensed under the [Mozilla Public License 2.0](LICENSE) (`MPL-2.0`). Modifications to MPL-covered source files that are distributed must remain available under the MPL, while separate files and larger works may use different terms subject to the license.
+
+The Underworld Studio name, logos, branding, and trademarks are not licensed under the MPL. Third-party software, Minecraft/NeoForge materials, and other third-party components remain subject to their respective licenses and terms.
+
+Copyright © 2026 tracerxbrhd / Underworld Studio.
