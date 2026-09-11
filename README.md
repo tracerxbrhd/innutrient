@@ -1,13 +1,13 @@
 ![Innutrient banner](img/innutrient-banner.png)
 
-# Innutrient
-
 <p align="center">
   <a href="https://github.com/tracerxbrhd/innutrient/releases"><img alt="Release" src="https://img.shields.io/github/v/release/tracerxbrhd/innutrient?include_prereleases&sort=semver&label=release"></a>
   <a href="https://github.com/tracerxbrhd/innutrient/actions/workflows/ci.yml"><img alt="Build" src="https://github.com/tracerxbrhd/innutrient/actions/workflows/ci.yml/badge.svg?branch=master"></a>
   <a href="https://modrinth.com/mod/innutrient"><img alt="Modrinth" src="https://img.shields.io/badge/Modrinth-Download-00AF5C?logo=modrinth&logoColor=white"></a>
   <a href="https://www.curseforge.com/minecraft/mc-mods/innutrient"><img alt="CurseForge" src="https://img.shields.io/badge/CurseForge-Download-F16436?logo=curseforge&logoColor=white"></a>
 </p>
+
+# Innutrient
 
 **Innutrient is a configurable nutrition system that rewards varied, balanced and well-prepared diets without replacing Minecraft's hunger mechanics.**
 
